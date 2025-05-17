@@ -7,28 +7,46 @@ import { AnalyticsCard } from '@/presentation/features/analytics/components/Anal
 import { HiChartPie, HiUserGroup, HiStar } from 'react-icons/hi';
 
 export const AnalyticsPage: React.FC = () => {
-  const { loading, error, data, timePeriod, changeTimePeriod } = useAnalyticsService();
+  const { isLoading, error, analytics, selectedPeriod, changePeriod } = useAnalyticsService();
 
+  // Get the data from the analytics response
+  const data = analytics?.data;
+
+  // Fallback calculations in case stats aren't provided
   const getTotalKudos = () => {
+    if (data?.stats?.totalKudos !== undefined) {
+      return data.stats.totalKudos;
+    }
     if (!data?.topCategories) return 0;
     return data.topCategories.reduce((total, category) => total + category.kudosCount, 0);
   };
 
   const getTotalTeams = () => {
+    if (data?.stats?.totalTeams !== undefined) {
+      return data.stats.totalTeams;
+    }
     if (!data?.topTeams) return 0;
     return data.topTeams.length;
   };
 
-  const getTopCategory = () => {
-    if (!data?.topCategories || data.topCategories.length === 0) return { name: 'N/A', kudosCount: 0 };
-    return data.topCategories[0];
+  const getTotalCategories = () => {
+    if (data?.stats?.totalCategories !== undefined) {
+      return data.stats.totalCategories;
+    }
+    if (!data?.topCategories) return 0;
+    return data.topCategories.length;
+  };
+
+  const getTopCategoryName = () => {
+    if (!data?.topCategories || data.topCategories.length === 0) return 'N/A';
+    return data.topCategories[0].name;
   };
 
   if (error) {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="bg-red-100 text-red-800 p-4 rounded-lg">
-          Error: {error}
+          Error: {error.message}
         </div>
       </div>
     );
@@ -40,9 +58,9 @@ export const AnalyticsPage: React.FC = () => {
         <h1 className="text-2xl font-bold text-gray-800">Analytics Dashboard</h1>
       </div>
 
-      <PeriodSelector activePeriod={timePeriod} onChange={changeTimePeriod} />
+      <PeriodSelector activePeriod={selectedPeriod} onChange={changePeriod} />
 
-      {loading ? (
+      {isLoading ? (
         <div className="flex justify-center items-center h-64">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
         </div>
@@ -53,7 +71,7 @@ export const AnalyticsPage: React.FC = () => {
               title="Total Kudos"
               value={getTotalKudos()}
               icon={<HiChartPie className="text-blue-500" />}
-              description={`For ${timePeriod} period`}
+              description={`For ${selectedPeriod.replace('_', ' ')} period`}
               color="blue"
             />
             <AnalyticsCard
@@ -65,9 +83,9 @@ export const AnalyticsPage: React.FC = () => {
             />
             <AnalyticsCard
               title="Total Categories"
-              value={getTopCategory().kudosCount}
+              value={getTotalCategories()}
               icon={<HiStar className="text-yellow-500" />}
-              description={getTopCategory().name}
+              description={getTopCategoryName()}
               color="yellow"
             />
           </div>

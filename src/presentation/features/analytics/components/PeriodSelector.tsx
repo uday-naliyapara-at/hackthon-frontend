@@ -14,7 +14,8 @@ export const PeriodSelector: React.FC<PeriodSelectorProps> = ({
     { value: 'weekly', label: 'Weekly' },
     { value: 'monthly', label: 'Monthly' },
     { value: 'quarterly', label: 'Quarterly' },
-    { value: 'yearly', label: 'Yearly' }
+    { value: 'yearly', label: 'Yearly' },
+    { value: 'all_time', label: 'All Time' }
   ];
 
   return (

@@ -10,11 +10,23 @@ export interface CategoryStats {
   kudosCount: number;
 }
 
-export type TimePeriod = "weekly" | "monthly" | "quarterly" | "yearly";
+export type TimePeriod =
+  | "weekly"
+  | "monthly"
+  | "quarterly"
+  | "yearly"
+  | "all_time";
+
+export interface AnalyticsStats {
+  totalKudos: number;
+  totalTeams: number;
+  totalCategories: number;
+}
 
 export interface AnalyticsData {
   topTeams: TeamStats[];
   topCategories: CategoryStats[];
+  stats: AnalyticsStats;
   timePeriod: TimePeriod;
 }
 

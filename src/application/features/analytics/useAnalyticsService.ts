@@ -1,48 +1,52 @@
 import { useState, useEffect } from "react";
-import { AnalyticsData, TimePeriod } from "@/domain/models/analytics/types";
-import { AnalyticsRepository } from "@/infrastructure/api/repositories/AnalyticsRepository";
+import {
+  AnalyticsResponse,
+  TimePeriod,
+} from "../../../domain/models/analytics/types";
+import { analyticsRepository } from "../../../infrastructure/repositories/analytics/AnalyticsRepository";
 
+/**
+ * Hook for managing analytics data and operations
+ */
 export const useAnalyticsService = () => {
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
-  const [data, setData] = useState<AnalyticsData | null>(null);
-  const [timePeriod, setTimePeriod] = useState<TimePeriod>("weekly");
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [error, setError] = useState<Error | null>(null);
+  const [analytics, setAnalytics] = useState<AnalyticsResponse | null>(null);
+  const [selectedPeriod, setSelectedPeriod] = useState<TimePeriod>("all_time");
 
-  const analyticsRepository = new AnalyticsRepository();
-
+  // Fetch analytics data based on selected period
   const fetchAnalytics = async (period: TimePeriod) => {
+    setIsLoading(true);
+    setError(null);
+
     try {
-      setLoading(true);
-      setError(null);
-
-      const response = await analyticsRepository.getAnalytics(period);
-
-      if (response.success) {
-        setData(response.data);
-      } else {
-        setError(response.message);
-      }
-    } catch (error) {
-      setError("Failed to fetch analytics data");
-      console.error(error);
+      const data = await analyticsRepository.getAnalytics(period);
+      setAnalytics(data);
+    } catch (err) {
+      setError(
+        err instanceof Error ? err : new Error("Failed to fetch analytics")
+      );
+      console.error("Error in analytics service:", err);
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
-  const changeTimePeriod = (period: TimePeriod) => {
-    setTimePeriod(period);
+  // Change the selected time period
+  const changePeriod = (period: TimePeriod) => {
+    setSelectedPeriod(period);
   };
 
+  // Fetch data when period changes
   useEffect(() => {
-    fetchAnalytics(timePeriod);
-  }, [timePeriod]);
+    fetchAnalytics(selectedPeriod);
+  }, [selectedPeriod]);
 
   return {
-    loading,
+    isLoading,
     error,
-    data,
-    timePeriod,
-    changeTimePeriod,
+    analytics,
+    selectedPeriod,
+    changePeriod,
   };
 };

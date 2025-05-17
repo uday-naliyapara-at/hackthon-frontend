@@ -39,6 +39,11 @@ export const MOCK_ANALYTICS: Record<TimePeriod, AnalyticsResponse> = {
           kudosCount: 177,
         },
       ],
+      stats: {
+        totalKudos: 584,
+        totalTeams: 3,
+        totalCategories: 3,
+      },
       timePeriod: "weekly",
     },
   },
@@ -80,6 +85,11 @@ export const MOCK_ANALYTICS: Record<TimePeriod, AnalyticsResponse> = {
           kudosCount: 380,
         },
       ],
+      stats: {
+        totalKudos: 1255,
+        totalTeams: 5,
+        totalCategories: 3,
+      },
       timePeriod: "monthly",
     },
   },
@@ -121,6 +131,11 @@ export const MOCK_ANALYTICS: Record<TimePeriod, AnalyticsResponse> = {
           kudosCount: 750,
         },
       ],
+      stats: {
+        totalKudos: 2620,
+        totalTeams: 7,
+        totalCategories: 3,
+      },
       timePeriod: "quarterly",
     },
   },
@@ -162,7 +177,58 @@ export const MOCK_ANALYTICS: Record<TimePeriod, AnalyticsResponse> = {
           kudosCount: 2400,
         },
       ],
+      stats: {
+        totalKudos: 8400,
+        totalTeams: 7,
+        totalCategories: 3,
+      },
       timePeriod: "yearly",
+    },
+  },
+  all_time: {
+    success: true,
+    message: "Analytics data retrieved successfully",
+    data: {
+      topTeams: [
+        {
+          id: 1,
+          name: "ALPHA",
+          kudosCount: 3500,
+        },
+        {
+          id: 2,
+          name: "BRAVO",
+          kudosCount: 2800,
+        },
+        {
+          id: 7,
+          name: "GOLF",
+          kudosCount: 2600,
+        },
+      ],
+      topCategories: [
+        {
+          id: 1,
+          name: "Teamwork",
+          kudosCount: 9800,
+        },
+        {
+          id: 2,
+          name: "Innovation",
+          kudosCount: 8500,
+        },
+        {
+          id: 3,
+          name: "Helping Hand",
+          kudosCount: 7200,
+        },
+      ],
+      stats: {
+        totalKudos: 25500,
+        totalTeams: 7,
+        totalCategories: 3,
+      },
+      timePeriod: "all_time",
     },
   },
 };
