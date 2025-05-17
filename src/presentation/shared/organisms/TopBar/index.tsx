@@ -1,9 +1,7 @@
 import { cn } from '@/lib/utils';
 import { type User } from '@/domain/models/user/types';
-import { UserCard } from '../../molecules/UserCard';
-import { Button } from '../../atoms/Button';
 import { Icon } from '../../atoms/Icon';
-import { HiPlus, HiUser, HiArrowRightOnRectangle, HiTrophy } from 'react-icons/hi2';
+import {  HiUser, HiArrowRightOnRectangle, HiTrophy, HiChartBar } from 'react-icons/hi2';
 import { UserAvatar } from '../../atoms/UserAvatar';
 import {
   DropdownMenu,
@@ -27,7 +25,7 @@ export function TopBar({
   className, 
   user, 
   onLogout, 
-  onProfileClick 
+  onProfileClick
 }: TopBarProps) {
   const handleLogout = () => {
     localStorage.clear();
@@ -55,8 +53,8 @@ export function TopBar({
         <div className="hidden md:flex items-center gap-4">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <div className="cursor-pointer">
-                <UserAvatar user={user} size="md" />
+              <div className="cursor-pointer flex items-center gap-2">
+                <UserAvatar user={user} size="lg"  className="border-2 border-blue-500"/>
               </div>
             </DropdownMenuTrigger>
             <DropdownMenuContent 
@@ -69,6 +67,15 @@ export function TopBar({
               >
                 <Icon icon={HiUser} className="w-4 h-4 mr-2" />
                 Profile
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link 
+                  to="/analytics" 
+                  className="flex items-center w-full cursor-pointer hover:bg-gray-50 focus:bg-gray-50"
+                >
+                  <Icon icon={HiChartBar} className="w-4 h-4 mr-2" />
+                  Analytics Dashboard
+                </Link>
               </DropdownMenuItem>
               <DropdownMenuSeparator className="bg-gray-200" />
               <DropdownMenuItem 

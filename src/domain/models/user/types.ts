@@ -49,6 +49,7 @@ export interface AuthResponse {
   success: boolean;
   message: string;
   user: User;
+  token: string;
 }
 
 // Value Objects - for validation and business rules

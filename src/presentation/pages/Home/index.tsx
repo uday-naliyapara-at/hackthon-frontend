@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
+import Masonry from 'react-masonry-css';
 import { KudoCard } from '@/components/ui/KudoCard';
 import { KudoFilters } from '@/components/ui/KudoFilters';
 import { kudosRepository } from '@/infrastructure/api/kudos/KudosRepository';
@@ -8,6 +9,17 @@ import { Kudos } from '@/domain/models/kudos/types';
 import { useDebounce } from '@/presentation/hooks/useDebounce';
 import { Link } from '../../shared/atoms/Link/index.tsx';
 import { HiChartPie } from 'react-icons/hi2';
+import styles from './Home.module.css';
+
+// Define breakpoints for responsive masonry layout
+const breakpointColumns = {
+  default: 4, // Default number of columns
+  1536: 4,    // 2xl screens
+  1280: 3,    // xl screens
+  1024: 3,    // lg screens
+  768: 2,     // md screens
+  640: 1,     // sm screens
+};
 
 export const HomePage: React.FC = () => {
   const [kudos, setKudos] = useState<Kudos[]>([]);
@@ -27,7 +39,10 @@ export const HomePage: React.FC = () => {
     try {
       setIsLoading(true);
       setError(null);
-      const response = await kudosRepository.getAllKudos({ teamId });
+      const response = await kudosRepository.getAllKudos({ 
+        teamId,
+        sortOrder: sortOrder === 'recent' ? 'asc' : 'desc'
+      });
       setKudos(response);
     } catch (err) {
       setError('Failed to fetch kudos. Please try again later.');
@@ -40,7 +55,7 @@ export const HomePage: React.FC = () => {
   // Initial fetch
   useEffect(() => {
     fetchKudos(selectedTeamId);
-  }, [selectedTeamId]);
+  }, [selectedTeamId, sortOrder]);
 
   // Handle search
   useEffect(() => {
@@ -54,7 +69,10 @@ export const HomePage: React.FC = () => {
       try {
         setIsSearching(true);
         setError(null);
-        const results = await kudosRepository.searchKudos(debouncedSearchQuery, { teamId: selectedTeamId });
+        const results = await kudosRepository.searchKudos(debouncedSearchQuery, { 
+          teamId: selectedTeamId,
+          sortOrder: sortOrder === 'recent' ? 'asc' : 'desc'
+        });
         setKudos(results);
       } catch (err) {
         setError('Failed to search kudos. Please try again later.');
@@ -65,7 +83,7 @@ export const HomePage: React.FC = () => {
     };
 
     searchKudos();
-  }, [debouncedSearchQuery, selectedTeamId]);
+  }, [debouncedSearchQuery, selectedTeamId, sortOrder]);
 
   // Sort kudos
   const sortedKudos = useMemo(() => {
@@ -88,16 +106,6 @@ export const HomePage: React.FC = () => {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">Kudos Wall</h1>
-        <Link 
-          to="/analytics" 
-          className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md transition-colors"
-        >
-          <HiChartPie />
-          Analytics Dashboard
-        </Link>
-      </div>
       <KudoFilters
         onSearch={handleSearch}
         onTeamFilter={handleTeamFilter}
@@ -110,21 +118,26 @@ export const HomePage: React.FC = () => {
           <AlertDescription>{error}</AlertDescription>
         </Alert>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
+        <div className="mt-6">
           {(isLoading || isSearching) ? (
-            <div className="col-span-full flex justify-center py-8">
+            <div className="flex justify-center py-8">
               <LoadingSpinner size="lg" />
             </div>
           ) : (
             <>
-              {sortedKudos.map((kudo) => (
-                <KudoCard
-                  key={kudo.id}
-                  kudos={kudo}
-                />
-              ))}
+              <Masonry
+                breakpointCols={breakpointColumns}
+                className={styles['masonry-grid']}
+                columnClassName={styles['masonry-grid-column']}
+              >
+                {sortedKudos.map((kudo) => (
+                  <div key={kudo.id} className={styles['masonry-grid-item']}>
+                    <KudoCard kudos={kudo} />
+                  </div>
+                ))}
+              </Masonry>
               {sortedKudos.length === 0 && (
-                <div className="col-span-full text-center text-gray-500 py-8">
+                <div className="text-center text-gray-500 py-8">
                   No kudos found matching your filters.
                 </div>
               )}

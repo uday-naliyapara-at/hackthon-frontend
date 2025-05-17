@@ -28,7 +28,7 @@ export const KudoFilters: React.FC<KudoFiltersProps> = ({
   const { data: teams, isLoading: isLoadingTeams, error: teamsError } = useTeams(teamService);
 
   return (
-    <div className="bg-white mb-6">
+    <div className="mb-6">
       <div className="flex flex-col md:flex-row gap-4" style={{flexDirection: 'row-reverse'}}>
 
         {/* Sort Dropdown */}

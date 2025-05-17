@@ -30,6 +30,7 @@ interface ApiResponse {
 
 type KudosParams = {
   teamId?: number;
+  sortOrder?: 'asc' | 'desc';
 }
 
 export class KudosRepository extends BaseRepository {

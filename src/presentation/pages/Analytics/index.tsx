@@ -5,6 +5,7 @@ import { TopTeamsChart } from '@/presentation/features/analytics/components/TopT
 import { TopCategoriesChart } from '@/presentation/features/analytics/components/TopCategoriesChart';
 import { AnalyticsCard } from '@/presentation/features/analytics/components/AnalyticsCard';
 import { HiChartPie, HiUserGroup, HiStar } from 'react-icons/hi';
+import { LoadingSpinner } from '@/presentation/shared/atoms/LoadingSpinner';
 
 export const AnalyticsPage: React.FC = () => {
   const { isLoading, error, analytics, selectedPeriod, changePeriod } = useAnalyticsService();
@@ -62,7 +63,7 @@ export const AnalyticsPage: React.FC = () => {
 
       {isLoading ? (
         <div className="flex justify-center items-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+          <LoadingSpinner size="lg" />
         </div>
       ) : (
         <>

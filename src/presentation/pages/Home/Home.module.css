@@ -1,0 +1,14 @@
+.masonry-grid {
+  display: flex;
+  width: auto;
+  margin-left: -1rem; /* Adjust the gap between columns */
+}
+
+.masonry-grid-column {
+  padding-left: 1rem; /* Adjust the gap between columns */
+  background-clip: padding-box;
+}
+
+.masonry-grid-item {
+  margin-bottom: 1rem; /* Adjust the gap between rows */
+} 

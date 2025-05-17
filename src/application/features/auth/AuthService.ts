@@ -68,9 +68,9 @@ export class AuthService implements IAuthService {
       emailVerified: true // Since login succeeded, we can assume email is verified
     });
 
-    // Store the user ID as a temporary session token
+    // Store the token from the response
     await this.sessionService.initializeSession({
-      accessToken: `temp-token-${response.user.id}`,
+      accessToken: response.token,
       refreshToken: undefined
     });
     
