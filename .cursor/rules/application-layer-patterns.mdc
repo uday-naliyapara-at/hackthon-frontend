@@ -1,0 +1,129 @@
+---
+description: When ever create or edit file in application layyer
+globs: src/application/**/*.ts
+---
+# Application Layer Patterns
+
+## Service Implementation Patterns
+
+### Entity Usage
+
+1. Always use domain entities in service methods
+   - Convert repository responses to entities
+   - Validate through entities before operations
+   - Use entity methods for business logic
+   - Return entities from service methods
+
+Example:
+
+```typescript
+class ExampleService {
+  async getItems(): Promise<ItemEntity[]> {
+    const items = await repository.getItems();
+    return items.map((item) => ItemEntity.create(item));
+  }
+
+  async validateItem(data: ItemData): Promise<void> {
+    // Use entity for validation
+    const entity = ItemEntity.create(data);
+    entity.validate();
+  }
+}
+```
+
+### Service Organization
+
+1. Keep related business logic in one service
+   - Avoid splitting into multiple services (e.g., validation services)
+   - Follow AuthService pattern for consistency
+2. Service methods should:
+   - Accept raw data or IDs
+   - Return domain entities
+   - Throw domain-specific errors
+
+Example:
+
+```typescript
+class UserService {
+  async register(data: RegisterDTO): Promise<UserEntity> {
+    // Validate through entity
+    const emailVO = new Email(data.email);
+    if (!emailVO.isValid()) {
+      throw new ValidationError('Invalid email');
+    }
+
+    // Use repository
+    const response = await repository.register(data);
+
+    // Return as entity
+    return UserEntity.create(response);
+  }
+}
+```
+
+### Error Handling
+
+1. Use domain-specific errors
+2. Validate through entities first
+3. Handle repository errors appropriately
+4. Maintain error hierarchy
+
+Example:
+
+```typescript
+class DomainError extends Error {
+  constructor(
+    message: string,
+    public code: string
+  ) {
+    super(message);
+  }
+}
+
+class ValidationError extends DomainError {
+  constructor(message: string) {
+    super(message, 'VALIDATION_ERROR');
+  }
+}
+```
+
+## Testing Patterns
+
+### Test Organization
+
+1. Follow AuthService test structure
+2. Test entity conversions
+3. Test business rules
+4. Test error cases
+
+Example:
+
+```typescript
+describe('UserService', () => {
+  it('should convert repository response to entity', async () => {
+    const result = await service.getUser(id);
+    expect(result).toBeInstanceOf(UserEntity);
+  });
+
+  it('should validate through entity', async () => {
+    await expect(service.validate(invalidData)).rejects.toThrow(ValidationError);
+  });
+});
+```
+
+### Mock Setup
+
+1. Mock repositories return raw data
+2. Service converts to entities
+3. Verify entity usage in tests
+
+Example:
+
+```typescript
+const mockRepository = {
+  getUser: vi.fn().mockResolvedValue(rawData),
+};
+
+const result = await service.getUser(id);
+expect(result).toBeInstanceOf(UserEntity);
+```

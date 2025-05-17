@@ -1,0 +1,242 @@
+---
+description: This rule outlines the standard procedures for testing the infrastructure layer, focusing on API clients, repositories, and external service integrations.
+globs: src/infrastructure/**/*.test.ts
+---
+# Infrastructure Layer Testing SOP
+
+## Overview
+
+This document outlines the standard procedures for testing the infrastructure layer, focusing on API clients, repositories, and external service integrations.
+
+## Test Structure
+
+### 1. File Organization
+
+```typescript
+// Example: AuthRepository.test.ts
+describe('Infrastructure > API > Auth > AuthRepository', () => {
+  describe('HTTP Methods', () => {
+    describe('POST /auth/register', () => {
+      // Registration endpoint tests
+    })
+  })
+  
+  describe('Error Handling', () => {
+    // Error scenarios
+  })
+})
+```
+
+### 2. Naming Conventions
+
+- Test files: `*.test.ts`
+- Test suites: Infrastructure > Category > Service > Class
+- Test cases: Should follow the pattern:
+  - Success: "should successfully [action] when [condition]"
+  - Failure: "should handle [error type] when [condition]"
+
+## Test Categories
+
+### 1. HTTP Request Tests
+
+Test each endpoint for:
+- Correct URL construction
+- HTTP method
+- Headers
+- Request body
+- Query parameters
+- Path parameters
+
+```typescript
+describe('POST /auth/register', () => {
+  it('should send request to correct URL')
+  it('should include correct headers')
+  it('should send correct request body')
+  it('should handle query parameters')
+})
+```
+
+### 2. Response Handling
+
+Test response processing for:
+- Successful responses
+- Error responses
+- Response transformation
+- Type validation
+- Edge cases
+
+```typescript
+describe('response handling', () => {
+  it('should parse successful response')
+  it('should transform response to domain model')
+  it('should validate response structure')
+  it('should handle empty response')
+})
+```
+
+### 3. Error Handling
+
+Test error scenarios:
+- HTTP status codes
+- Network errors
+- Timeout errors
+- Validation errors
+- Domain-specific errors
+
+```typescript
+describe('error handling', () => {
+  it('should handle 400 Bad Request')
+  it('should handle 401 Unauthorized')
+  it('should handle 404 Not Found')
+  it('should handle network errors')
+  it('should handle timeouts')
+})
+```
+
+## Testing Best Practices
+
+### 1. Mock Setup
+
+### 1. Using Mock Service Worker (MSW)
+
+```typescript
+import { server } from '@/infrastructure/api/mock/server'
+import { http } from 'msw'
+
+describe('AuthRepository', () => {
+  // Reset handlers after each test
+  afterEach(() => server.resetHandlers())
+  
+  it('should handle successful login', async () => {
+    // Setup mock response using MSW
+    server.use(
+      http.post('/auth/login', () => {
+        return HttpResponse.json({
+          user: mockUser,
+          tokens: mockTokens
+        })
+      })
+    )
+    
+    const result = await repository.login(credentials)
+    expect(result).toEqual(expectedResponse)
+  })
+})
+```
+
+### 2. Mock Response Patterns
+
+```typescript
+// Success response
+server.use(
+  http.post('/auth/register', () => {
+    return HttpResponse.json(mockData, { status: 201 })
+  })
+)
+
+// Error response
+server.use(
+  http.post('/auth/login', () => {
+    return HttpResponse.json(
+      { code: 'AUTH_001', message: 'Invalid credentials' },
+      { status: 400 }
+    )
+  })
+)
+
+// Network error
+server.use(
+  http.post('/auth/register', () => {
+    return HttpResponse.error()
+  })
+)
+```
+
+### 3. Testing Best Practices with MSW
+
+```typescript
+describe('AuthRepository', () => {
+  it('should handle API errors correctly', async () => {
+    // Override default handler for specific test
+    server.use(
+      http.post('/auth/login', () => {
+        return HttpResponse.json(
+          { code: 'AUTH_001', message: 'Invalid credentials' },
+          { status: 400 }
+        )
+      })
+    )
+
+    await expect(repository.login(credentials))
+      .rejects
+      .toThrow(InvalidCredentialsError)
+  })
+})
+```
+
+## Test Coverage Requirements
+
+1. **HTTP Methods**: 100% coverage
+   - All endpoints tested
+   - All HTTP methods verified
+   - Request format validated
+   - Headers verified
+
+2. **Response Handling**: 100% coverage
+   - Success responses
+   - Error responses
+   - Response transformation
+   - Type validation
+
+3. **Error Handling**: 100% coverage
+   - All error status codes
+   - Network errors
+   - Timeout errors
+   - Validation errors
+
+## Running Tests
+
+```bash
+# Run all infrastructure tests
+npm test src/infrastructure/**/*.test.ts
+
+# Run specific repository tests
+npm test src/infrastructure/api/auth/AuthRepository.test.ts
+
+# Run with coverage
+npm test -- --coverage
+```
+
+## Mocking Best Practices
+
+1. **Mock External Dependencies**
+   - Use MSW handlers for all API mocks
+   - External services via MSW
+   - Environment variables
+
+2. **Mock Response Types**
+   - Success responses via MSW handlers
+   - Error responses via MSW handlers
+   - Network errors via MSW handlers
+   - Malformed responses via MSW handlers
+
+3. **Verify Interactions**
+   - Request format using MSW handlers
+   - Headers through MSW interceptors
+   - Body serialization via MSW
+   - Error handling with MSW responses
+
+## Review Checklist
+
+Before submitting infrastructure tests for review:
+
+- [ ] All endpoints are tested using MSW handlers
+- [ ] Request validation is complete
+- [ ] Response handling is verified
+- [ ] Error scenarios are covered
+- [ ] Network errors are handled
+- [ ] Type safety is maintained
+- [ ] MSW handlers are properly typed
+- [ ] No direct fetch mocking
+- [ ] Coverage requirements met
+- [ ] Tests are isolated

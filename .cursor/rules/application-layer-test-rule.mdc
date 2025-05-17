@@ -1,0 +1,290 @@
+---
+description: This rule outlines the standard procedures for testing the application layer, focusing on services, use cases, and business logic that coordinates between the domain and infrastructure layers.
+globs: src/application/**/*.test.ts
+---
+# Application Layer Testing SOP
+
+## Overview
+
+This document outlines the standard procedures for testing the application layer, focusing on services, use cases, and business logic that coordinates between the domain and infrastructure layers.
+
+## Test Structure
+
+### 1. File Organization
+
+```typescript
+// Example: AuthService.test.ts
+describe('Application > Features > Auth > AuthService', () => {
+  describe('User Registration', () => {
+    describe('register', () => {
+      // Registration flow tests
+    })
+  })
+  
+  describe('Email Verification', () => {
+    // Verification flow tests
+  })
+})
+```
+
+### 2. Naming Conventions
+
+- Test files: `*.test.ts`
+- Test suites: Application > Features > Module > Service
+- Test cases: Should follow the pattern:
+  - Success: "should [expected outcome] when [condition]"
+  - Failure: "should throw [error type] when [condition]"
+  - Integration: "should coordinate with [dependency] to [outcome]"
+
+## Test Categories
+
+### 1. Service Method Tests
+
+Test each service method for:
+- Happy path execution
+- Input validation
+- Business rule enforcement
+- Dependency coordination
+- Error propagation
+
+```typescript
+describe('register', () => {
+  it('should successfully register user with valid data')
+  it('should send welcome email after registration')
+  it('should store user credentials securely')
+  it('should validate input before processing')
+})
+```
+
+### 2. Integration Tests
+
+Test integration with dependencies:
+- Repository calls
+- External service coordination
+- Domain model usage
+- Event handling
+
+```typescript
+describe('integration', () => {
+  it('should call repository with correct data')
+  it('should transform domain models correctly')
+  it('should handle repository errors appropriately')
+  it('should coordinate multiple service calls')
+})
+```
+
+### 3. Error Handling
+
+Test error scenarios:
+- Input validation errors
+- Business rule violations
+- Infrastructure errors
+- Domain errors
+- Unexpected errors
+
+```typescript
+describe('error handling', () => {
+  it('should handle invalid input data')
+  it('should handle repository failures')
+  it('should handle external service errors')
+  it('should maintain consistency on failure')
+})
+```
+
+## Testing Best Practices
+
+### 1. Mock Setup
+
+```typescript
+// Mock repository
+const mockAuthRepository = {
+  register: vi.fn(),
+  verifyEmail: vi.fn(),
+  refreshUserToken: vi.fn(),
+} as unknown as IAuthRepository
+
+// Mock email service
+const mockEmailService = {
+  sendVerificationEmail: vi.fn(),
+  sendWelcomeEmail: vi.fn(),
+} as unknown as IEmailService
+
+// Service instantiation
+const authService = new AuthService(mockAuthRepository, mockEmailService)
+```
+
+### 2. Test Data Factory
+
+```typescript
+// Test data factories
+const createRegisterDTO = (overrides = {}) => ({
+  email: 'test@example.com',
+  password: 'StrongP@ss123',
+  firstName: 'John',
+  lastName: 'Doe',
+  ...overrides,
+})
+
+const createAuthResponse = (overrides = {}) => ({
+  user: {
+    id: '123',
+    email: 'test@example.com',
+    firstName: 'John',
+    lastName: 'Doe',
+    emailVerified: false,
+  },
+  tokens: {
+    accessToken: 'mock-token',
+    refreshToken: 'mock-refresh',
+  },
+  ...overrides,
+})
+```
+
+### 3. Mock Verification
+
+```typescript
+describe('dependency interaction', () => {
+  it('should verify repository calls', async () => {
+    const data = createRegisterDTO()
+    await service.register(data)
+    
+    expect(mockAuthRepository.register).toHaveBeenCalledWith(data)
+    expect(mockEmailService.sendWelcomeEmail).toHaveBeenCalledWith(data.email)
+  })
+})
+```
+
+## Test Implementation Example
+
+```typescript
+import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { AuthService } from '../AuthService'
+import type { IAuthRepository, IEmailService } from '../../../domain/interfaces/auth'
+import { InvalidInputError, RegistrationError } from '../errors'
+
+describe('Application > Features > Auth > AuthService', () => {
+  let authService: AuthService
+  let mockAuthRepository: IAuthRepository
+  let mockEmailService: IEmailService
+
+  beforeEach(() => {
+    mockAuthRepository = {
+      register: vi.fn(),
+      verifyEmail: vi.fn(),
+      refreshUserToken: vi.fn(),
+    } as unknown as IAuthRepository
+
+    mockEmailService = {
+      sendVerificationEmail: vi.fn(),
+      sendWelcomeEmail: vi.fn(),
+    } as unknown as IEmailService
+
+    authService = new AuthService(mockAuthRepository, mockEmailService)
+  })
+
+  describe('register', () => {
+    const validData = createRegisterDTO()
+    const mockResponse = createAuthResponse()
+
+    it('should successfully register user', async () => {
+      mockAuthRepository.register.mockResolvedValue(mockResponse)
+      mockEmailService.sendWelcomeEmail.mockResolvedValue(undefined)
+
+      const result = await authService.register(validData)
+
+      expect(result).toEqual(mockResponse)
+      expect(mockAuthRepository.register).toHaveBeenCalledWith(validData)
+      expect(mockEmailService.sendWelcomeEmail).toHaveBeenCalledWith(validData.email)
+    })
+
+    it('should handle registration failure', async () => {
+      mockAuthRepository.register.mockRejectedValue(new Error('Registration failed'))
+
+      await expect(authService.register(validData))
+        .rejects
+        .toThrow(RegistrationError)
+    })
+
+    it('should validate input before processing', async () => {
+      const invalidData = createRegisterDTO({ email: 'invalid-email' })
+
+      await expect(authService.register(invalidData))
+        .rejects
+        .toThrow(InvalidInputError)
+    })
+  })
+})
+```
+
+## Test Coverage Requirements
+
+1. **Service Methods**: 100% coverage
+   - All public methods tested
+   - All business rules verified
+   - All error paths covered
+   - Input validation tested
+
+2. **Integration Points**: 100% coverage
+   - Repository interactions
+   - External service calls
+   - Event handling
+   - Error propagation
+
+3. **Error Handling**: 100% coverage
+   - Input validation
+   - Business rules
+   - Infrastructure errors
+   - Domain errors
+
+## Running Tests
+
+```bash
+# Run all application tests
+npm test src/application/**/*.test.ts
+
+# Run specific feature tests
+npm test src/application/features/auth/__tests__/AuthService.test.ts
+
+# Run with coverage
+npm test -- --coverage
+```
+
+## Mocking Best Practices
+
+1. **Mock Dependencies**
+   - Repositories
+   - External services
+   - Domain services
+   - Event emitters
+
+2. **Mock Response Types**
+   - Success cases
+   - Error cases
+   - Partial responses
+   - Edge cases
+
+3. **Verify Interactions**
+   - Method calls
+   - Parameters
+   - Call order
+   - Error handling
+
+## Review Checklist
+
+Before submitting application tests for review:
+
+- [ ] All service methods are tested
+- [ ] Business rules are verified
+- [ ] Input validation is tested
+- [ ] Error handling is comprehensive
+- [ ] Dependencies are properly mocked
+- [ ] Integration points are verified
+- [ ] Type safety is maintained
+- [ ] No actual external calls
+- [ ] Coverage requirements met
+- [ ] Tests are isolated and deterministic
+- [ ] Mock verifications are complete
+- [ ] Edge cases are covered
+- [ ] Error propagation is tested
+- [ ] Documentation is clear and complete

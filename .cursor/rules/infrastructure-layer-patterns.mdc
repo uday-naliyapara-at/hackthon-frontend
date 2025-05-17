@@ -1,0 +1,171 @@
+---
+description: When ever create or edit file in infrastructure layer
+globs: src/infrastructure/**/*.ts
+---
+# Infrastructure Layer Patterns
+
+## Applies To
+
+### Repository Files
+
+```
+src/infrastructure/api/**/*Repository.ts
+src/infrastructure/api/**/repositories/*.ts
+!src/infrastructure/api/**/*.test.ts
+```
+
+### Mock API Files
+
+```
+src/infrastructure/api/mock/**/*.ts
+```
+
+### Test Files
+
+```
+src/infrastructure/api/**/__tests__/*.test.ts
+src/infrastructure/api/**/*.test.ts
+```
+
+## Repository Implementation Patterns
+
+### Base Repository Usage
+
+1. Always extend BaseRepository for API repositories
+   - Use common error handling
+   - Override handleErrorCode for specific errors
+   - Use typed HTTP client
+
+Example:
+
+```typescript
+export class UserRepository extends BaseRepository implements IUserRepository {
+  private readonly baseUrl = '/api/users';
+
+  protected override handleErrorCode(code: string, message: string): Error | null {
+    switch (code) {
+      case UserErrorCode.NOT_FOUND:
+        return new UserNotFoundError(message);
+      default:
+        return super.handleErrorCode(code, message);
+    }
+  }
+}
+```
+
+### Error Handling
+
+1. Define domain-specific error codes
+2. Map API errors to domain errors
+3. Handle common HTTP status codes
+4. Provide detailed error messages
+
+Example:
+
+```typescript
+export enum UserErrorCode {
+  NOT_FOUND = 'USER_001',
+  INVALID_CREDENTIALS = 'USER_002',
+}
+
+protected override handleErrorResponse(errorData: BaseErrorResponse): Error {
+  // First try specific error codes
+  if (errorData.code) {
+    const error = this.handleErrorCode(errorData.code, errorData.message);
+    if (error) return error;
+  }
+
+  // Then handle HTTP status codes
+  return super.handleErrorResponse(errorData);
+}
+```
+
+### API Endpoints
+
+1. Use baseUrl for endpoint consistency
+2. Type all request/response data
+3. Use proper HTTP methods
+4. Handle all error cases
+
+Example:
+
+```typescript
+async getUser(id: string): Promise<User> {
+  try {
+    const response = await this.httpClient.get<UserResponse>(`${this.baseUrl}/${id}`);
+    return response.data;
+  } catch (error) {
+    throw this.handleError(error);
+  }
+}
+```
+
+### Mock Implementation
+
+1. Follow real API structure
+2. Use consistent error codes
+3. Simulate network delays
+4. Test error scenarios
+
+Example:
+
+```typescript
+export const mockUserApi = {
+  getUser: async (id: string): Promise<User> => {
+    await simulateDelay();
+    const user = mockUsers.find((u) => u.id === id);
+    if (!user) {
+      throw createError(UserErrorCode.NOT_FOUND, 'User not found');
+    }
+    return user;
+  },
+};
+```
+
+## Testing Patterns
+
+### Repository Tests
+
+1. Mock HTTP client
+2. Test successful responses
+3. Test error handling
+4. Verify error mapping
+
+Example:
+
+```typescript
+describe('UserRepository', () => {
+  it('should map API errors to domain errors', async () => {
+    mockHttpClient.get.mockRejectedValue({
+      message: JSON.stringify({
+        code: UserErrorCode.NOT_FOUND,
+        message: 'User not found',
+      }),
+    });
+
+    await expect(repository.getUser('123')).rejects.toThrow(UserNotFoundError);
+  });
+});
+```
+
+### Integration Tests
+
+1. Use mock API server
+2. Test complete flows
+3. Verify error handling
+4. Test retry logic
+
+Example:
+
+```typescript
+describe('User API Integration', () => {
+  it('should handle complete user flow', async () => {
+    const user = await repository.createUser(userData);
+    expect(user.id).toBeDefined();
+
+    await repository.updateUser(user.id, updates);
+    const updated = await repository.getUser(user.id);
+    expect(updated).toMatchObject(updates);
+  });
+});
+```

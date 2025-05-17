@@ -1,0 +1,117 @@
+---
+description: Mock API Implementation Guidelines
+globs: src/infrastructure/api/mock/**/*.ts
+---
+# Mock API Implementation Guidelines
+
+This document outlines the standard patterns and best practices for implementing mock APIs in our application.
+
+## Implementation Flow
+
+1. **Types & Initial Schema**
+
+   - Define request/response types
+   - Create base schema structure
+   - Document main success paths
+
+2. **Data Store**
+
+   - Create store with Map storage
+   - Implement CRUD operations
+   - Add basic error handling
+   - Ensure data persistence
+
+3. **Handlers & Refinement**
+
+   - Implement endpoint logic
+   - Add error handling
+   - Update schema with discovered cases
+   - Define error constants
+
+4. **Final Review**
+   - Verify schema matches implementation
+   - Register handlers
+   - Group related handlers
+
+## Key Patterns
+
+### 1. Error Handling
+
+```typescript
+// constants.ts
+export const FEATURE_ERROR_MESSAGES = {
+  SOME_ERROR: 'Descriptive error message',
+} as const;
+
+export const FEATURE_ERRORS = {
+  ERROR_NAME: {
+    code: 'FEATURE_001',
+    message: 'User-friendly message',
+  },
+} as const;
+
+// handler usage
+if (error instanceof Error) {
+  return HttpResponse.json(
+    createErrorResponse(FEATURE_ERRORS.ERROR_NAME.code, FEATURE_ERRORS.ERROR_NAME.message),
+    { status: 400 }
+  );
+}
+```
+
+### 2. Store Pattern
+
+```typescript
+class FeatureStore {
+  private data: Map<string, DataType>;
+  private static STORAGE_KEYS = { KEY: 'mock_feature_key' };
+
+  constructor() {
+    this.data = this.loadFromStorage() || this.seedInitialData();
+  }
+
+  async updateItem(id: string, data: DataType): Promise<void> {
+    if (invalidCondition) throw new Error(FEATURE_ERROR_MESSAGES.SOME_ERROR);
+    this.data.set(id, data);
+    this.persistData();
+  }
+}
+```
+
+## Critical Rules
+
+1. **Error Handling**
+
+   - Use constants for messages and codes
+   - Handle specific errors first
+   - Document in schema
+
+2. **Data Management**
+
+   - Use Map for storage
+   - Always persist changes
+   - Validate before updates
+
+3. **Handler Pattern**
+   - Validate auth first
+   - Use try-catch blocks
+   - Return proper status codes
+
+## Common Gotchas
+
+1. **Error Messages**
+
+   - Don't use string literals
+   - Keep messages user-friendly
+   - Use proper error codes
+
+2. **Data Storage**
+
+   - Always call persistData
+   - Handle storage errors
+   - Validate before saving
+
+3. **Auth & Validation**
+   - Always validate auth first
+   - Validate request data
+   - Return clear error messages

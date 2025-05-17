@@ -1,0 +1,266 @@
+---
+description: This rule outlines the standard procedures for writing domain unit tests in our application. Domain tests focus on business rules, invariants, and value object validations.
+globs: src/domain/**/*.test.ts
+---
+# Domain Unit Testing SOP
+
+## Overview
+
+This document outlines the standard procedures for writing domain unit tests in our application. Domain tests focus on business rules, invariants, and value object validations.
+
+## Test Structure
+
+### 1. File Organization
+
+```typescript
+// Example: User.test.ts
+describe('Domain > Models > User', () => {
+  describe('Value Objects', () => {
+    describe('Email', () => {
+      // Email VO tests
+    })
+    describe('Password', () => {
+      // Password VO tests
+    })
+  })
+  
+  describe('Entity', () => {
+    // Entity tests
+  })
+})
+```
+
+### 2. Naming Conventions
+
+- Test files: `*.test.ts`
+- Test suites: Domain > Category > Class/Type
+- Test cases: Should follow the pattern:
+  - Valid cases: "should [expected behavior] when [condition]"
+  - Invalid cases: "should throw error when [invalid condition]"
+
+## Test Categories
+
+### 1. Value Objects
+
+Test each Value Object for:
+- Construction
+- Validation rules
+- Immutability
+- Business rules
+- Edge cases
+
+```typescript
+describe('Value Objects > Email', () => {
+  describe('validation', () => {
+    it('should be valid for correct email format')
+    it('should be invalid for missing @')
+    it('should be invalid for missing domain')
+    it('should be invalid for empty string')
+  })
+  
+  describe('immutability', () => {
+    it('should not allow value modification')
+  })
+})
+```
+
+### 2. Entities
+
+Test each Entity for:
+- Construction
+- Factory methods
+- State validation
+- Business rules
+- Invariants
+- Derived properties
+
+```typescript
+describe('Entity > User', () => {
+  describe('creation', () => {
+    it('should create valid user')
+    it('should throw on invalid email')
+    it('should throw on invalid name')
+  })
+  
+  describe('properties', () => {
+    it('should expose read-only properties')
+    it('should maintain invariants')
+  })
+})
+```
+
+### 3. Domain Services
+
+Test each Domain Service for:
+- Business operations
+- Domain rules
+- Calculations
+- State transitions
+
+```typescript
+describe('Services > AuthService', () => {
+  describe('registration', () => {
+    it('should register valid user')
+    it('should enforce business rules')
+    it('should maintain consistency')
+  })
+})
+```
+
+## Testing Best Practices
+
+### 1. Test Data
+
+```typescript
+// Use factory functions for test data
+const createValidEmail = () => new Email('test@example.com')
+const createValidPassword = () => new Password('StrongP@ss123')
+const createValidName = () => new Name('John')
+
+// Use constants for test cases
+const VALID_EMAILS = ['test@example.com', 'user.name@domain.com']
+const INVALID_EMAILS = ['', '@domain.com', 'test@', 'test']
+```
+
+### 2. Error Testing
+
+```typescript
+describe('error handling', () => {
+  it('should throw specific error type', () => {
+    expect(() => new Email('')).toThrow(InvalidEmailError)
+  })
+
+  it('should include error details', () => {
+    try {
+      new Email('')
+    } catch (error) {
+      expect(error.details).toBeDefined()
+    }
+  })
+})
+```
+
+### 3. Property Testing
+
+For complex validation rules, use property testing:
+
+```typescript
+describe('property testing', () => {
+  it.each([
+    ['test@example.com', true],
+    ['invalid-email', false],
+    ['@missing-local.com', false],
+  ])('should validate email %s as %s', (email, expected) => {
+    const emailVO = new Email(email)
+    expect(emailVO.isValid()).toBe(expected)
+  })
+})
+```
+
+## Test Implementation Example
+
+```typescript
+import { Email, Password, Name, UserEntity } from '../models/user'
+
+describe('Domain > Models > User', () => {
+  describe('Value Objects', () => {
+    describe('Email', () => {
+      it.each([
+        ['test@example.com', true],
+        ['user.name@domain.co.uk', true],
+        ['invalid-email', false],
+        ['@missing-local.com', false],
+      ])('should validate email %s as %s', (email, expected) => {
+        const emailVO = new Email(email)
+        expect(emailVO.isValid()).toBe(expected)
+      })
+
+      it('should be immutable', () => {
+        const email = new Email('test@example.com')
+        expect(() => {
+          (email as any).value = 'new@example.com'
+        }).toThrow()
+      })
+    })
+
+    // Similar tests for Password and Name VOs
+  })
+
+  describe('UserEntity', () => {
+    const validParams = {
+      id: '123',
+      email: 'test@example.com',
+      firstName: 'John',
+      lastName: 'Doe',
+    }
+
+    it('should create valid user', () => {
+      const user = UserEntity.create(validParams)
+      expect(user).toBeInstanceOf(UserEntity)
+      expect(user.email).toBe(validParams.email)
+    })
+
+    it('should throw on invalid email', () => {
+      expect(() => 
+        UserEntity.create({ ...validParams, email: 'invalid' })
+      ).toThrow('Invalid email')
+    })
+  })
+})
+```
+
+## Test Coverage Requirements
+
+1. **Value Objects**: 100% coverage
+   - All validation rules
+   - All business rules
+   - Edge cases
+   - Error conditions
+
+2. **Entities**: 100% coverage
+   - Construction
+   - Validation
+   - Business rules
+   - Property access
+
+3. **Domain Services**: 100% coverage
+   - Business operations
+   - Error handling
+   - State transitions
+
+## Running Tests
+
+```bash
+# Run all domain tests
+npm test src/domain/**/*.test.ts
+
+# Run specific test file
+npm test src/domain/models/user/User.test.ts
+
+# Run with coverage
+npm test -- --coverage
+```
+
+## Continuous Integration
+
+- All domain tests must pass before merge
+- Coverage thresholds must be met:
+  - Statements: 100%
+  - Branches: 100%
+  - Functions: 100%
+  - Lines: 100%
+
+## Review Checklist
+
+Before submitting domain tests for review:
+
+- [ ] Tests follow naming conventions
+- [ ] All value objects are tested
+- [ ] All entities are tested
+- [ ] All business rules are covered
+- [ ] Error cases are tested
+- [ ] Immutability is verified
+- [ ] Edge cases are covered
+- [ ] Tests are deterministic
+- [ ] No external dependencies
+- [ ] Coverage requirements met

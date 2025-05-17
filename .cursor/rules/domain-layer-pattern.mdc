@@ -1,0 +1,215 @@
+---
+description: When ever create or edit file in domain layer
+globs: src/domain/**/*.ts
+---
+# Domain Layer Patterns
+
+## Applies To
+
+### Entity Files
+```
+src/domain/models/**/*.ts
+!src/domain/models/**/*.test.ts
+!src/domain/models/**/types.ts
+!src/domain/models/**/index.ts
+```
+
+### Interface Files
+```
+src/domain/interfaces/**/*.ts
+!src/domain/interfaces/**/*.test.ts
+!src/domain/interfaces/**/index.ts
+```
+
+### Type Definition Files
+```
+src/domain/models/**/types.ts
+```
+
+## Entity Implementation Patterns
+
+### Entity Structure
+1. Use immutable properties with private fields and public getters
+2. Implement validation in constructor
+3. Use static factory methods for creation
+4. Return new instances for state changes
+5. Implement domain-specific validation methods
+
+Example:
+```typescript
+export class ModelProviderEntity implements ModelProvider {
+  constructor(
+    private readonly _id: string,
+    private readonly _name: string,
+    private readonly _logo: string,
+    private _keyStatus: KeyStatus,
+    private _isEnabled: boolean,
+    private readonly _models: ModelConfig[],
+    private _apiKey?: string
+  ) {
+    this.validateState();
+  }
+
+  get id(): string {
+    return this._id;
+  }
+
+  static create(params: {
+    id: string;
+    name: string;
+    // ... other params
+  }): ModelProviderEntity {
+    return new ModelProviderEntity(
+      params.id,
+      params.name,
+      // ... other params
+    );
+  }
+
+  private validateState(): void {
+    if (!this._id) throw new Error('ID is required');
+    // ... other validations
+  }
+}
+```
+
+### Value Objects
+1. Define as TypeScript types/enums for simple cases
+2. Use classes for complex value objects with behavior
+3. Ensure immutability
+4. Include validation logic
+
+Example:
+```typescript
+export enum KeyStatus {
+  NOT_CONFIGURED = 'not_configured',
+  VALID = 'valid',
+  INVALID = 'invalid',
+  EXPIRED = 'expired',
+}
+
+export interface ModelConfig {
+  id: string;
+  name: string;
+  isEnabled: boolean;
+  providerId: string;
+  capabilities: string[];
+}
+```
+
+### Domain Methods
+1. Return new instances for state changes
+2. Validate business rules
+3. Encapsulate complex logic
+4. Use descriptive method names
+
+Example:
+```typescript
+export class ModelProviderEntity {
+  updateKeyStatus(status: KeyStatus, apiKey?: string): ModelProviderEntity {
+    return new ModelProviderEntity(
+      this._id,
+      this._name,
+      // ... other unchanged properties
+      status,
+      this._isEnabled,
+      this._models,
+      apiKey || this._apiKey
+    );
+  }
+
+  hasValidKey(): boolean {
+    return this.keyStatus === KeyStatus.VALID;
+  }
+
+  findModel(modelId: string): ModelConfig | undefined {
+    return this.models.find((model) => model.id === modelId);
+  }
+}
+```
+
+### Interface Definitions
+1. Define clear method contracts
+2. Document error cases
+3. Use domain types
+4. Keep interfaces focused and cohesive
+
+Example:
+```typescript
+export interface IModelProviderRepository {
+  /**
+   * Get all model providers
+   * @throws {UnauthorizedError} When authentication is invalid
+   */
+  getProviders(): Promise<ModelProvider[]>;
+
+  /**
+   * Update provider API key
+   * @throws {UnauthorizedError} When authentication is invalid
+   * @throws {NotFoundError} When provider is not found
+   * @throws {ValidationError} When API key is invalid
+   */
+  updateProviderKey(providerId: string, key: string): Promise<void>;
+}
+```
+
+## Testing Patterns
+
+### Entity Tests
+1. Test entity creation
+2. Test validation rules
+3. Test immutability
+4. Test state transitions
+5. Test domain methods
+
+Example:
+```typescript
+describe('Domain > Models > ModelProvider > ModelProviderEntity', () => {
+  describe('creation', () => {
+    it('should create valid provider with factory method', () => {
+      const provider = ModelProviderEntity.create(validParams);
+      expect(provider).toBeInstanceOf(ModelProviderEntity);
+      expect(provider.id).toBe(validParams.id);
+    });
+  });
+
+  describe('validation', () => {
+    it('should throw on missing required fields', () => {
+      expect(() => 
+        ModelProviderEntity.create({ ...validParams, id: '' })
+      ).toThrow('ID is required');
+    });
+  });
+
+  describe('immutability', () => {
+    it('should return new instance on state change', () => {
+      const provider = ModelProviderEntity.create(validParams);
+      const updated = provider.updateKeyStatus(KeyStatus.VALID);
+      expect(updated).not.toBe(provider);
+    });
+  });
+});
+```
+
+### Value Object Tests
+1. Test validation rules
+2. Test immutability
+3. Test equality comparison
+4. Test serialization/deserialization
+
+Example:
+```typescript
+describe('Domain > Models > ModelConfig', () => {
+  it('should validate required fields', () => {
+    expect(() => 
+      new ModelConfig({ ...validConfig, id: '' })
+    ).toThrow('Model ID is required');
+  });
+
+  it('should be immutable', () => {
+    const config = new ModelConfig(validConfig);
+    expect(() => {
+      (config as any).id = 'new-id';
+    }).toThrow(TypeError);
+  });
+}); 

@@ -1,0 +1,329 @@
+---
+description: Comprehensive guide for writing behavior-driven React tests using Vitest and React Testing Library, focusing on unit and integration testing patterns.
+globs: src/presentation/**/*.test.tsx
+---
+# React Testing SOP
+Comprehensive guide for writing behavior-driven React tests using Vitest and React Testing Library, focusing on unit and integration testing patterns.
+
+## Core Testing Principles
+
+1. **Test Types**
+   - Unit tests: Individual components, hooks, utilities
+   - Integration tests: Component interactions, complex flows
+   - Coverage target: 70% unit, 20% integration, 10% E2E
+
+2. **Behavior-First Testing**
+   - Test WHAT the code does, not HOW it does it
+   - Focus on user-facing behavior and outcomes
+   - Avoid coupling tests to implementation details
+   - Tests should survive refactoring
+   - Write tests as if you're the end user
+
+3. **Test Structure**
+```typescript
+import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+import { renderHook, act } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
+import { vi } from 'vitest'
+
+/**
+ * Test suite description
+ * Brief overview of what's being tested
+ */
+describe('ComponentName', () => {
+  // Setup and teardown
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  // #region Test Group
+  // Related test cases
+  // #endregion
+})
+```
+
+## Test Organization
+
+1. **File Structure**
+   - Name: `ComponentName.test.tsx`
+   - Location: Same directory as component
+   - Import order: Testing libs -> Component -> Mocks
+
+2. **Test Groups**
+   - Use `#region` comments for logical grouping
+   - Order: Simple -> Complex
+   - Document group purpose
+   - Keep related tests together
+
+3. **Test Case Pattern**
+```typescript
+it('should [expected behavior]', async () => {
+  // Arrange: Setup test case
+  const props = { /* ... */ }
+
+  // Act: Perform actions
+  render(<Component {...props} />)
+  
+  // Assert: Verify outcome
+  expect(screen.getByRole('button')).toBeInTheDocument()
+})
+```
+
+## Testing Priorities
+
+1. **Unit Tests**
+   - Initial state/props
+   - Component rendering
+   - Event handlers
+   - State changes
+   - Hook behavior
+   - Error handling
+   - Edge cases
+
+2. **Integration Tests**
+   - Component interactions
+   - Data flow
+   - Context updates
+   - Complex workflows
+   - Responsive behavior
+   - Error propagation
+
+## Component Testing Guidelines
+
+1. **Rendering Tests**
+```typescript
+// #region Rendering
+it('should render with default props', () => {
+  render(<Component />)
+  expect(screen.getByRole('button')).toBeInTheDocument()
+})
+
+it('should render with custom props', () => {
+  render(<Component variant="primary" />)
+  expect(screen.getByRole('button')).toHaveClass('primary')
+})
+// #endregion
+```
+
+2. **Interaction Tests**
+```typescript
+// #region User Interactions
+it('should handle click events', async () => {
+  const onClickMock = vi.fn()
+  render(<Component onClick={onClickMock} />)
+  
+  await userEvent.click(screen.getByRole('button'))
+  expect(onClickMock).toHaveBeenCalled()
+})
+// #endregion
+```
+
+## Hook Testing Guidelines
+
+1. **State Tests**
+```typescript
+// #region Hook State
+it('should manage state correctly', () => {
+  const { result } = renderHook(() => useMyHook())
+  
+  act(() => {
+    result.current.setValue('new')
+  })
+  
+  expect(result.current.value).toBe('new')
+})
+// #endregion
+```
+
+2. **Effect Tests**
+```typescript
+// #region Effects
+it('should handle side effects', async () => {
+  const { result } = renderHook(() => useMyHook())
+  
+  await act(async () => {
+    await result.current.fetchData()
+  })
+  
+  expect(result.current.data).toBeDefined()
+})
+// #endregion
+```
+
+## Integration Testing Guidelines
+
+1. **Setup**
+```typescript
+const renderWithProviders = (ui: React.ReactElement) => {
+  return render(
+    <ThemeProvider>
+      <OtherProviders>
+        {ui}
+      </OtherProviders>
+    </ThemeProvider>
+  )
+}
+```
+
+2. **Complex Flows**
+```typescript
+// #region Complex Workflows
+it('should complete multi-step process', async () => {
+  renderWithProviders(<ComplexForm />)
+  
+  // Step 1
+  await userEvent.type(screen.getByLabelText('Name'), 'John')
+  await userEvent.click(screen.getByText('Next'))
+  
+  // Step 2
+  expect(screen.getByText('Step 2')).toBeVisible()
+  await userEvent.click(screen.getByText('Submit'))
+  
+  // Final state
+  await waitFor(() => {
+    expect(screen.getByText('Success')).toBeVisible()
+  })
+})
+// #endregion
+```
+
+## Mocking Guidelines
+
+1. **Module Mocks**
+```typescript
+// #region Mocks
+vi.mock('module', () => ({
+  useFeature: vi.fn().mockReturnValue({
+    data: mockData,
+    loading: false
+  })
+}))
+```
+
+2. **Function Mocks**
+```typescript
+const mockFn = vi.fn()
+mockFn.mockImplementation(() => 'result')
+```
+
+## Best Practices
+
+1. **DO**
+   - Test user-facing behavior and outcomes
+   - Write tests that survive refactoring
+   - Use semantic queries (getByRole, getByLabelText)
+   - Mock external dependencies
+   - Test error states
+   - Document complex test flows
+   - Clean up after tests
+   - Use proper async patterns
+   - Test from the user's perspective
+   - Focus on component contracts/APIs
+
+2. **DON'T**
+   - Test implementation details (internal state, private methods)
+   - Couple tests to specific implementations
+   - Use non-semantic queries (getByTestId) as first choice
+   - Test library internals
+   - Skip error handling
+   - Leave commented-out tests
+   - Write dependent tests
+   - Test exact component structure
+   - Assert on component internals
+   - Mock things not needed to be mocked
+
+## Examples of Implementation vs Behavior Testing
+
+```typescript
+// #region Bad: Testing Implementation
+it('❌ tests implementation details', () => {
+  const { result } = renderHook(() => useCounter())
+  
+  // Bad: Testing internal state directly
+  expect(result.current.count).toBe(0)
+  
+  // Bad: Testing specific implementation of increment
+  result.current.increment()
+  expect(result.current.count).toBe(1)
+})
+
+// #region Good: Testing Behavior
+it('✅ tests user-facing behavior', () => {
+  render(<Counter />)
+  
+  // Good: Testing what user sees
+  expect(screen.getByText('Count: 0')).toBeInTheDocument()
+  
+  // Good: Testing user interaction and outcome
+  userEvent.click(screen.getByRole('button', { name: /increment/i }))
+  expect(screen.getByText('Count: 1')).toBeInTheDocument()
+})
+```
+
+## Testing Checklist
+
+- [ ] Tests follow naming convention
+- [ ] Tests are grouped logically
+- [ ] All exports are tested
+- [ ] Mocks are properly setup/cleaned
+- [ ] Edge cases are covered
+- [ ] Error scenarios are tested
+- [ ] Async operations use proper patterns
+- [ ] Complex flows are documented
+- [ ] Tests are isolated
+- [ ] Cleanup is thorough
+
+## Common Patterns
+
+1. **Async Testing**
+```typescript
+// #region Async
+it('should handle async operations', async () => {
+  render(<AsyncComponent />)
+  
+  // Initial state
+  expect(screen.getByText('Loading')).toBeVisible()
+  
+  // Wait for update
+  await waitFor(() => {
+    expect(screen.getByText('Data')).toBeVisible()
+  })
+})
+// #endregion
+```
+
+2. **Responsive Testing**
+```typescript
+// #region Responsive
+it('should handle viewport changes', async () => {
+  render(<ResponsiveComponent />)
+  
+  // Desktop
+  expect(screen.getByTestId('desktop-view')).toBeVisible()
+  
+  // Mobile
+  window.innerWidth = 375
+  fireEvent.resize(window)
+  
+  await waitFor(() => {
+    expect(screen.getByTestId('mobile-view')).toBeVisible()
+  })
+})
+// #endregion
+```
+
+3. **Error Testing**
+```typescript
+// #region Error Handling
+it('should handle errors', async () => {
+  const mockError = new Error('Failed')
+  mockApiCall.mockRejectedValue(mockError)
+  
+  render(<Component />)
+  
+  await waitFor(() => {
+    expect(screen.getByText('Error: Failed')).toBeVisible()
+  })
+})
+// #endregion
+```
