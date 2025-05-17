@@ -1,15 +1,15 @@
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
-import { useCallback } from 'react';
+import { useCallback } from "react";
 
-import { SessionState } from '@/domain/models/auth/types';
-import { UserEntity } from '@/domain/models/user/User';
+import { SessionState } from "@/domain/models/auth/types";
+import { UserEntity } from "@/domain/models/user/User";
 
-import { useAuthContext } from '../context/AuthContext';
+import { useAuthContext } from "../context/AuthContext";
 
 // Authentication query key - export it for use in other hooks
-export const AUTH_QUERY_KEY = ['auth', 'session'];
-const LOCAL_STORAGE_USER_KEY = 'auth_user';
+export const AUTH_QUERY_KEY = ["auth", "session"];
+const LOCAL_STORAGE_USER_KEY = "auth_user";
 
 /**
  * Custom hook for authentication state management
@@ -34,7 +34,10 @@ export const useAuth = (): SessionState => {
       const cachedUser = queryClient.getQueryData<UserEntity>(AUTH_QUERY_KEY);
       if (cachedUser) {
         // Store in localStorage for persistence
-        localStorage.setItem(LOCAL_STORAGE_USER_KEY, JSON.stringify(cachedUser));
+        localStorage.setItem(
+          LOCAL_STORAGE_USER_KEY,
+          JSON.stringify(cachedUser)
+        );
         return cachedUser;
       }
 
@@ -58,7 +61,7 @@ export const useAuth = (): SessionState => {
       // Clear cached user data on validation errors
       localStorage.removeItem(LOCAL_STORAGE_USER_KEY);
       queryClient.setQueryData(AUTH_QUERY_KEY, null);
-      console.error('Session validation failed:', error);
+      console.error("Session validation failed:", error);
       return null;
     }
   }, [sessionService, authService, queryClient]);
@@ -74,7 +77,10 @@ export const useAuth = (): SessionState => {
     refetchOnWindowFocus: false,
     retry: (failureCount, error) => {
       // Only retry once, and not for authentication errors
-      if (failureCount > 0 || (error.message && error.message.includes('auth'))) {
+      if (
+        failureCount > 0 ||
+        (error.message && error.message.includes("auth"))
+      ) {
         return false;
       }
       return true;
@@ -82,7 +88,7 @@ export const useAuth = (): SessionState => {
   });
 
   if (error) {
-    console.error('Auth error:', error);
+    console.error("Auth error:", error);
   }
 
   return {

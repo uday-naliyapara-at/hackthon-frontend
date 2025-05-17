@@ -1,7 +1,7 @@
 import { FC } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 
-import { AuthGuardConfig } from '@/domains/models/auth/types';
+import { AuthGuardConfig } from '@/domain/models/auth/types';
 import { LoadingSpinner } from '@/presentation/shared/atoms/LoadingSpinner';
 
 import { useAuth } from '../hooks/useAuth';

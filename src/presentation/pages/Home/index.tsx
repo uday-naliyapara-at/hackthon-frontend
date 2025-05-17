@@ -6,6 +6,8 @@ import { Alert, AlertTitle, AlertDescription } from '@/presentation/shared/atoms
 import { LoadingSpinner } from '@/presentation/shared/atoms/LoadingSpinner/LoadingSpinner';
 import { Kudos } from '@/domain/models/kudos/types';
 import { useDebounce } from '@/presentation/hooks/useDebounce';
+import { Link } from '../../shared/atoms/Link/index.tsx';
+import { HiChartPie } from 'react-icons/hi2';
 
 export const HomePage: React.FC = () => {
   const [kudos, setKudos] = useState<Kudos[]>([]);
@@ -86,6 +88,16 @@ export const HomePage: React.FC = () => {
 
   return (
     <div className="container mx-auto px-4 py-8">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold text-gray-800">Kudos Wall</h1>
+        <Link 
+          to="/analytics" 
+          className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md transition-colors"
+        >
+          <HiChartPie />
+          Analytics Dashboard
+        </Link>
+      </div>
       <KudoFilters
         onSearch={handleSearch}
         onTeamFilter={handleTeamFilter}

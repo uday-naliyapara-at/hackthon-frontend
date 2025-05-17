@@ -1,7 +1,5 @@
 import { ThemeProvider } from 'next-themes';
-
 import { BrowserRouter, useRoutes } from 'react-router-dom';
-
 import { AuthProvider } from '@/presentation/features/auth/context/AuthContext';
 import { TeamProvider } from '@/presentation/features/team/context/TeamContext';
 import { routes } from '@/presentation/routes';
@@ -13,16 +11,16 @@ const AppRoutes = () => {
 
 function App() {
   return (
-    <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-      <AuthProvider>
-        <TeamProvider>
-          <BrowserRouter>
+    <BrowserRouter>
+      <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+        <AuthProvider>
+          <TeamProvider>
             <AppRoutes />
             <Toaster position="top-right" />
-          </BrowserRouter>
-        </TeamProvider>
-      </AuthProvider>
-    </ThemeProvider>
+          </TeamProvider>
+        </AuthProvider>
+      </ThemeProvider>
+    </BrowserRouter>
   );
 }
 
