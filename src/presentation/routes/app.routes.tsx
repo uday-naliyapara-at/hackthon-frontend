@@ -1,9 +1,7 @@
-import {  RouteObject } from 'react-router-dom';
+import { RouteObject } from 'react-router-dom';
 import { AppLayout } from '@/presentation/features/layout/organisms/AppLayout';
 import { ProtectedRoute } from '@/presentation/shared/guards/ProtectedRoute';
-
-
-
+import { HomePage } from '@/presentation/pages/Home';
 
 export const appRoutes: RouteObject[] = [
   {
@@ -16,7 +14,7 @@ export const appRoutes: RouteObject[] = [
     children: [
       {
         path: '/home',
-        element: <div>Home Page</div>,
+        element: <HomePage />,
       },
     ],
   },

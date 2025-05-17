@@ -25,7 +25,7 @@ export function AppLayout({ withPadding = false }: AppLayoutProps) {
     },
   });
 
-  if (isLoading) {
+  if (isLoading || !user) {
     return (
       <div className="flex h-screen">
         <Skeleton className="h-full w-64" />
@@ -42,7 +42,11 @@ export function AppLayout({ withPadding = false }: AppLayoutProps) {
   return (
     <div className="flex h-screen overflow-x-hidden">
       <div className="flex-1 flex flex-col overflow-x-hidden">
-        <TopBar onSidebarToggle={toggleCollapsed} isSidebarCollapsed={isCollapsed} />
+        <TopBar 
+          onSidebarToggle={toggleCollapsed} 
+          isSidebarCollapsed={isCollapsed} 
+          user={user}
+        />
         <main
           className={cn('flex-1 !overflow-x-hidden', withPadding && 'p-4 sm:p-6 md:p-8')}
           role="main"

@@ -132,7 +132,27 @@ export class AuthRepository extends BaseRepository implements IAuthRepository {
 
   async register(data: RegisterUserDTO): Promise<AuthResponse> {
     try {
-      return await this.httpClient.post<AuthResponse>(`${this.baseUrl}/signup`, data);
+      const response = await this.httpClient.post<any>(`${this.baseUrl}/signup`, data);
+      
+      // Adapt the API response to match AuthResponse format
+      if (response.success) {
+        return {
+          success: response.success,
+          message: response.message,
+          user: {
+            id: response.data.id || crypto.randomUUID(), // Generate a temporary ID if not provided
+            email: response.data.email,
+            firstName: data.firstName,
+            lastName: data.lastName,
+            emailVerified: false,
+            fullName: `${data.firstName} ${data.lastName}`,
+            role: 'USER',
+            teamId: data.teamId || 0
+          }
+        };
+      }
+      
+      throw new Error('Invalid response format from server');
     } catch (error) {
       const parsedError = this.handleError(error);
       if (parsedError instanceof ValidationError) {

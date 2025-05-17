@@ -23,9 +23,12 @@ export const useRegister = () => {
         teamId: data.teamId || 0
       };
 
+      console.log("registerData*********", registerData)
       const response = await authService.register(registerData);
+      console.log("response*********", response)
       return response;
     } catch (err) {
+      console.log("err*********", err)
       setError(err instanceof Error ? err : new Error('Registration failed'));
       throw err;
     } finally {

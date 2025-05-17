@@ -121,14 +121,6 @@ export const LoginForm = ({
             >
               Password
             </label>
-            {/* {forgotPasswordUrl && (
-              <Link
-                to={forgotPasswordUrl}
-                className="transition-colors text-muted-foreground hover:text-muted-foreground/90 text-sm hover:underline"
-              >
-                Forgot password?
-              </Link>
-            )} */}
           </div>
 
           <div className="relative">

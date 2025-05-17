@@ -3,6 +3,7 @@ import { ThemeProvider } from 'next-themes';
 import { BrowserRouter, useRoutes } from 'react-router-dom';
 
 import { AuthProvider } from '@/presentation/features/auth/context/AuthContext';
+import { TeamProvider } from '@/presentation/features/team/context/TeamContext';
 import { routes } from '@/presentation/routes';
 import { Toaster } from '@/presentation/shared/atoms/Toast';
 
@@ -14,10 +15,12 @@ function App() {
   return (
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
       <AuthProvider>
-        <BrowserRouter>
-          <AppRoutes />
-          <Toaster position="top-right" />
-        </BrowserRouter>
+        <TeamProvider>
+          <BrowserRouter>
+            <AppRoutes />
+            <Toaster position="top-right" />
+          </BrowserRouter>
+        </TeamProvider>
       </AuthProvider>
     </ThemeProvider>
   );

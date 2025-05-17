@@ -2,11 +2,18 @@ import React from 'react';
 
 import { PropDef, PropsTable } from '@/presentation/features/docs/atom/PropsTable';
 import { ComponentExample } from '@/presentation/features/docs/molecules/ComponentExample';
+import { type User } from '@/domain/models/user/types';
 
 import { TopBar } from './index';
 
 // Define the props for the TopBar component
 const topBarProps: PropDef[] = [
+  {
+    name: 'user',
+    type: 'User',
+    required: true,
+    description: 'User object containing profile information',
+  },
   {
     name: 'onSidebarToggle',
     type: '() => void',
@@ -26,14 +33,27 @@ const topBarProps: PropDef[] = [
 ];
 
 export const TopBarDocs: React.FC = () => {
+  // Sample user data for examples
+  const sampleUser: User = {
+    id: 1,
+    firstName: 'John',
+    lastName: 'Doe',
+    fullName: 'John Doe',
+    email: 'john.doe@example.com',
+    role: 'USER',
+    teamId: 1,
+    emailVerified: true,
+    avatarUrl: 'https://ui-avatars.com/api/?name=John+Doe',
+  };
+
   return (
     <div className="space-y-6">
       <div className="prose max-w-none dark:prose-invert mb-8">
         <h2 className="text-2xl font-bold">TopBar</h2>
         <p>
           The TopBar component is an organism that serves as the top navigation bar of the
-          application. It includes a sidebar toggle button and a theme toggle, with space for
-          additional elements. It's typically used in combination with a Sidebar component.
+          application. It includes a sidebar toggle button, user avatar, and a Give Kudos button.
+          It's typically used in combination with a Sidebar component.
         </p>
       </div>
 
@@ -41,13 +61,14 @@ export const TopBarDocs: React.FC = () => {
 
       <ComponentExample
         name="Basic TopBar"
-        description="Standard top bar with sidebar toggle and theme toggle"
+        description="Standard top bar with sidebar toggle and user avatar"
         code={`<TopBar
+  user={user}
   onSidebarToggle={() => console.log('Sidebar toggle clicked')}
 />`}
       >
         <div className="border rounded-lg overflow-hidden">
-          <TopBar onSidebarToggle={() => {}} />
+          <TopBar user={sampleUser} onSidebarToggle={() => {}} />
         </div>
       </ComponentExample>
 
@@ -55,12 +76,13 @@ export const TopBarDocs: React.FC = () => {
         name="With Collapsed Sidebar State"
         description="TopBar with collapsed sidebar indication"
         code={`<TopBar
+  user={user}
   isSidebarCollapsed={true}
   onSidebarToggle={() => console.log('Sidebar toggle clicked')}
 />`}
       >
         <div className="border rounded-lg overflow-hidden">
-          <TopBar isSidebarCollapsed={true} onSidebarToggle={() => {}} />
+          <TopBar user={sampleUser} isSidebarCollapsed={true} onSidebarToggle={() => {}} />
         </div>
       </ComponentExample>
 
@@ -68,12 +90,17 @@ export const TopBarDocs: React.FC = () => {
         name="With Custom Styling"
         description="TopBar with custom background color"
         code={`<TopBar
+  user={user}
   className="bg-slate-100 dark:bg-slate-800"
   onSidebarToggle={() => console.log('Sidebar toggle clicked')}
 />`}
       >
         <div className="border rounded-lg overflow-hidden">
-          <TopBar className="bg-slate-100 dark:bg-slate-800" onSidebarToggle={() => {}} />
+          <TopBar 
+            user={sampleUser} 
+            className="bg-slate-100 dark:bg-slate-800" 
+            onSidebarToggle={() => {}} 
+          />
         </div>
       </ComponentExample>
 
@@ -82,6 +109,7 @@ export const TopBarDocs: React.FC = () => {
         description="TopBar used within a full page layout"
         code={`<div className="h-[600px] border rounded-lg overflow-hidden flex flex-col">
   <TopBar
+    user={user}
     onSidebarToggle={() => console.log('Sidebar toggle clicked')}
   />
   <div className="flex-1 flex">
@@ -97,7 +125,7 @@ export const TopBarDocs: React.FC = () => {
 </div>`}
       >
         <div className="h-[600px] border rounded-lg overflow-hidden flex flex-col">
-          <TopBar onSidebarToggle={() => {}} />
+          <TopBar user={sampleUser} onSidebarToggle={() => {}} />
           <div className="flex-1 flex">
             <div className="w-64 border-r bg-sidebar">
               <div className="p-4">Sidebar content</div>

@@ -7,7 +7,7 @@ import { authRoutes } from './auth.routes';
 export const routes: RouteObject[] = [
   {
     path: '/',
-    element: <Navigate to="/auth/login" replace />,
+    element: <Navigate to="/home" replace />,
   },
   ...authRoutes,
   ...appRoutes,

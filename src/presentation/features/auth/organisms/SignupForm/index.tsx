@@ -1,7 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useState } from 'react';
 import { MdKeyboardArrowDown } from 'react-icons/md';
-
 import { useForm } from 'react-hook-form';
 
 import { Button } from '@/presentation/shared/atoms/Button';
@@ -16,7 +15,9 @@ import {
 } from '@/components/ui/dropdown-menu';
 
 import { signupSchema, useAuthErrors, useRegister } from '../../hooks';
+import { useTeams } from '@/presentation/hooks/useTeams';
 import type { SignupFormData, SignupFormProps } from '../../types/auth.types';
+import { useTeamContext } from '@/presentation/features/team/context/TeamContext';
 
 export const SignupForm = ({
   onSignupSuccess,
@@ -26,14 +27,10 @@ export const SignupForm = ({
   const { register: signUp, isLoading } = useRegister();
   const { error: authError, handleAuthError, clearError } = useAuthErrors();
   const [selectedTeam, setSelectedTeam] = useState('');
+  const { teamService } = useTeamContext();
 
-  const teams = [
-    { team: 'Engineering', teamId: 1 },
-    { team: 'Design', teamId: 2 },
-    { team: 'Product', teamId: 3 },
-    { team: 'Marketing', teamId: 4 },
-    { team: 'Sales', teamId: 5 }
-  ];
+  // Use the teams API
+  const { data: teams, isLoading: isLoadingTeams, error: teamsError } = useTeams(teamService);
 
   const {
     register,
@@ -110,9 +107,12 @@ export const SignupForm = ({
                 type="button"
                 variant="outline" 
                 className="w-full justify-between bg-white border border-input hover:bg-white"
+                disabled={isLoadingTeams}
               >
                 <span className="text-left truncate">
-                  {selectedTeam || 'Select a team'}
+                  {isLoadingTeams 
+                    ? 'Loading teams...' 
+                    : selectedTeam || 'Select a team'}
                 </span>
                 <MdKeyboardArrowDown className="ml-2 h-5 w-5 shrink-0 opacity-50" />
               </Button>
@@ -123,27 +123,36 @@ export const SignupForm = ({
               className="bg-white z-50"
               style={{ 
                 width: '100%',
-                minWidth: '335px',
+                minWidth: '450px',
                 maxWidth: '100%'
               }}
             >
-              {teams.map((teamItem) => (
+              {isLoadingTeams ? (
+                <DropdownMenuItem disabled>Loading teams...</DropdownMenuItem>
+              ) : teamsError ? (
+                <DropdownMenuItem disabled className="text-destructive">
+                  Failed to load teams
+                </DropdownMenuItem>
+              ) : teams?.map((team) => (
                 <DropdownMenuItem 
-                  key={teamItem.teamId}
+                  key={team.id}
                   className="py-2.5 hover:bg-gray-100 focus:bg-gray-100 cursor-pointer"
                   onClick={() => {
-                    setSelectedTeam(teamItem.team);
-                    setValue('team', teamItem.team.toLowerCase());
-                    setValue('teamId', teamItem.teamId);
+                    setSelectedTeam(team.name);
+                    setValue('team', team.name.toLowerCase());
+                    setValue('teamId', team.id);
                   }}
                 >
-                  {teamItem.team}
+                  {team.name}
                 </DropdownMenuItem>
               ))}
             </DropdownMenuContent>
           </DropdownMenu>
           {errors.team && (
             <p className="text-sm text-destructive">{errors.team.message}</p>
+          )}
+          {teamsError && !errors.team && (
+            <p className="text-sm text-destructive">Failed to load teams. Please try again later.</p>
           )}
         </div>
 

@@ -35,9 +35,12 @@ export class AuthService implements IAuthService {
       firstName: response.user.firstName,
       lastName: response.user.lastName,
       emailVerified: response.user.emailVerified,
+      fullName: `${response.user.firstName} ${response.user.lastName}`,
+      role: 'USER',
+      teamId: response.user.teamId || 0
     });
 
-    await this.sessionService.initializeSession(response.tokens);
+    // Skip session initialization since we don't have tokens
     this.currentUser = userEntity;
     return { ...response, user: userEntity };
   }
