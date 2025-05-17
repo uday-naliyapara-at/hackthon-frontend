@@ -2,6 +2,7 @@ import { RouteObject } from 'react-router-dom';
 import { AppLayout } from '@/presentation/features/layout/organisms/AppLayout';
 import { ProtectedRoute } from '@/presentation/shared/guards/ProtectedRoute';
 import { HomePage } from '@/presentation/pages/Home';
+import { AnalyticsPage } from '@/presentation/pages/Analytics';
 
 export const appRoutes: RouteObject[] = [
   {
@@ -15,6 +16,10 @@ export const appRoutes: RouteObject[] = [
       {
         path: '/home',
         element: <HomePage />,
+      },
+      {
+        path: '/analytics',
+        element: <AnalyticsPage />,
       },
     ],
   },
