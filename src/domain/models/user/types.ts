@@ -3,21 +3,25 @@
  */
 export interface User {
   /** Unique identifier for the user */
-  id: string;
-  /** User's email address */
-  email: string;
+  id: number;
   /** User's first name */
   firstName: string;
   /** User's last name */
   lastName: string;
+  /** User's full name */
+  fullName: string;
+  /** User's email address */
+  email: string;
+  /** User's role in the system */
+  role: UserRole;
+  /** User's team ID */
+  teamId: number | null;
   /** Whether the user's email is verified */
-  emailVerified: boolean;
+  emailVerified?: boolean;
   /** URL to the user's avatar image */
   avatarUrl?: string;
-  /** User's role in the system */
-  role?: 'Admin' | 'User';
   /** User's status in the system */
-  status: 'Pending' | 'Active' | 'Deactive';
+  status?: 'Pending' | 'Active' | 'Deactive';
   /** Date when user registered (for pending users) */
   registrationDate?: string;
   /** ID or name of the admin who changed the status */
@@ -33,16 +37,18 @@ export interface RegisterUserDTO {
   lastName: string;
   email: string;
   password: string;
+  teamId: number;
 }
 
 export interface Tokens {
   accessToken: string;
-  refreshToken: string;
+  refreshToken?: string;
 }
 
 export interface AuthResponse {
+  success: boolean;
+  message: string;
   user: User;
-  tokens: Tokens;
 }
 
 // Value Objects - for validation and business rules
@@ -83,7 +89,7 @@ export interface ResetPasswordDTO {
 }
 
 // User role and status types
-export const USER_ROLES = ['Admin', 'User'] as const;
+export const USER_ROLES = ['ADMIN', 'USER'] as const;
 export type UserRole = (typeof USER_ROLES)[number];
 
 export const USER_STATUSES = ['Pending', 'Active', 'Deactive'] as const;

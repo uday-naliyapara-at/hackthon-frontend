@@ -39,6 +39,9 @@ export class SessionService implements ISessionService {
     }
     try {
       this.setAccessToken(tokens.accessToken);
+      if (tokens.refreshToken) {
+        this.setRefreshToken(tokens.refreshToken);
+      }
     } catch (error) {
       if (error instanceof Error) {
         throw new TokenError(`Failed to initialize session: ${error.message}`);

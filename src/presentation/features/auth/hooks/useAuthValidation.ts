@@ -24,6 +24,8 @@ export const signupSchema = z
         message: 'Password must contain uppercase, lowercase, number, and special character',
       }),
     confirmPassword: z.string().min(1, 'Please confirm your password'),
+    team: z.string().min(1, 'Please select a team'),
+    teamId: z.number().optional(),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Passwords don't match",

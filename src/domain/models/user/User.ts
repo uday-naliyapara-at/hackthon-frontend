@@ -1,4 +1,4 @@
-import { EmailVO, NameVO, PasswordVO, User } from './types';
+import { EmailVO, NameVO, PasswordVO, User, UserRole } from './types';
 
 export class Email implements EmailVO {
   constructor(private readonly email: string) {}
@@ -49,111 +49,28 @@ export class Name implements NameVO {
   }
 }
 
-export class UserEntity implements User {
-  constructor(
-    private readonly _id: string,
-    private readonly _email: Email,
-    private readonly _firstName: Name,
-    private readonly _lastName: Name,
-    private readonly _emailVerified: boolean = false,
-    private readonly _role?: 'Admin' | 'User',
-    private readonly _status: 'Pending' | 'Active' | 'Deactive' = 'Pending',
-    private readonly _statusChangedBy?: string,
-    private readonly _statusChangedAt?: string,
-    private readonly _registrationDate?: string,
-    private readonly _createdAt?: string,
-    private readonly _avatarUrl?: string
-  ) {
-    this.validateState();
-  }
+export class UserEntity {
+  private constructor(
+    public readonly id: number,
+    public readonly email: string,
+    public readonly firstName: string,
+    public readonly lastName: string,
+    public readonly fullName: string,
+    public readonly role: UserRole,
+    public readonly teamId: number | null,
+    public readonly emailVerified: boolean = true
+  ) {}
 
-  get id(): string {
-    return this._id;
-  }
-
-  get email(): string {
-    return this._email.value;
-  }
-
-  get firstName(): string {
-    return this._firstName.value;
-  }
-
-  get lastName(): string {
-    return this._lastName.value;
-  }
-
-  get emailVerified(): boolean {
-    return this._emailVerified;
-  }
-
-  get role(): 'Admin' | 'User' | undefined {
-    return this._role;
-  }
-
-  get status(): 'Pending' | 'Active' | 'Deactive' {
-    return this._status;
-  }
-
-  get statusChangedBy(): string | undefined {
-    return this._statusChangedBy;
-  }
-
-  get statusChangedAt(): string | undefined {
-    return this._statusChangedAt;
-  }
-
-  get registrationDate(): string | undefined {
-    return this._registrationDate;
-  }
-
-  get createdAt(): string | undefined {
-    return this._createdAt;
-  }
-
-  get avatarUrl(): string | undefined {
-    return this._avatarUrl;
-  }
-
-  private validateState(): void {
-    if (!this._email.isValid()) {
-      throw new Error('Invalid email');
-    }
-    if (!this._firstName.isValid()) {
-      throw new Error('Invalid first name');
-    }
-    if (!this._lastName.isValid()) {
-      throw new Error('Invalid last name');
-    }
-  }
-
-  static create(params: {
-    id: string;
-    email: string;
-    firstName: string;
-    lastName: string;
-    emailVerified?: boolean;
-    role?: 'Admin' | 'User';
-    status?: 'Pending' | 'Active' | 'Deactive';
-    statusChangedBy?: string;
-    statusChangedAt?: string;
-    registrationDate?: string;
-    createdAt?: string;
-    avatarUrl?: string;
-  }): UserEntity {
+  static create(data: User): UserEntity {
     return new UserEntity(
-      params.id,
-      new Email(params.email),
-      new Name(params.firstName),
-      new Name(params.lastName),
-      params.emailVerified,
-      params.role,
-      params.status ?? 'Pending',
-      params.statusChangedBy,
-      params.statusChangedAt,
-      params.registrationDate,
-      params.createdAt,
-      params.avatarUrl
+      data.id,
+      data.email,
+      data.firstName,
+      data.lastName,
+      data.fullName,
+      data.role,
+      data.teamId,
+      data.emailVerified ?? true
     );
   }
 }

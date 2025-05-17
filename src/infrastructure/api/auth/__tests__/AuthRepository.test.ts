@@ -78,7 +78,7 @@ describe('Infrastructure > API > Auth > AuthRepository', () => {
 
       await testRepo.register(testData);
 
-      expect(mockHttpClient.post).toHaveBeenCalledWith('/api/auth/register', testData);
+      expect(mockHttpClient.post).toHaveBeenCalledWith('/auth/signup', testData);
     });
   });
 
@@ -108,7 +108,7 @@ describe('Infrastructure > API > Auth > AuthRepository', () => {
 
     it('should handle email exists conflict', async () => {
       server.use(
-        http.post('/api/auth/register', () => {
+        http.post('/auth/signup', () => {
           return HttpResponse.json(
             createErrorResponse(AUTH_ERRORS.EMAIL_EXISTS.code, AUTH_ERRORS.EMAIL_EXISTS.message),
             { status: 409 }
@@ -121,7 +121,7 @@ describe('Infrastructure > API > Auth > AuthRepository', () => {
 
     it('should handle validation errors', async () => {
       server.use(
-        http.post('/api/auth/register', () => {
+        http.post('/auth/signup', () => {
           return HttpResponse.json(
             createErrorResponse(
               'AUTH_002', // INVALID_INPUT
@@ -137,7 +137,7 @@ describe('Infrastructure > API > Auth > AuthRepository', () => {
 
     it('should handle network errors', async () => {
       server.use(
-        http.post('/api/auth/register', () => {
+        http.post('/auth/signup', () => {
           return new Response(null, { status: 500 });
         })
       );

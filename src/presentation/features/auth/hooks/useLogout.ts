@@ -18,6 +18,8 @@ interface UseLogoutReturn {
   error: Error | null;
 }
 
+const LOCAL_STORAGE_USER_KEY = 'auth_user';
+
 export const useLogout = (options: UseLogoutOptions = {}): UseLogoutReturn => {
   const { redirectTo = '/auth/login', onSuccess, onError } = options;
   const navigate = useNavigate();
@@ -38,11 +40,11 @@ export const useLogout = (options: UseLogoutOptions = {}): UseLogoutReturn => {
 
       await authService.logout();
 
-      // Set current session data to null in the query cache
+      // Clear all stored auth data
+      localStorage.removeItem(LOCAL_STORAGE_USER_KEY);
       queryClient.setQueryData(AUTH_QUERY_KEY, null);
 
-      // IMPORTANT: Remove queries instead of invalidating them to prevent unnecessary refetching
-      // This prevents 401 errors that would occur if queries were invalidated and refetched
+      // Remove queries instead of invalidating them to prevent unnecessary refetching
       queryClient.removeQueries({
         predicate: (query) =>
           query.queryKey[0] === 'auth' ||
@@ -50,7 +52,6 @@ export const useLogout = (options: UseLogoutOptions = {}): UseLogoutReturn => {
           query.queryKey[0] === 'chat',
       });
 
-      // Navigate away first before any possible query refetches
       onSuccess?.();
       navigate(redirectTo);
     } catch (error) {

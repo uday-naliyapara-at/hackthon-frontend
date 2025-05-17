@@ -41,18 +41,6 @@ export function AppLayout({ withPadding = false }: AppLayoutProps) {
 
   return (
     <div className="flex h-screen overflow-x-hidden">
-      {/* Mobile Sidebar */}
-      <MobileSidebar
-        open={isMobileOpen}
-        onOpenChange={setIsMobileOpen}
-        user={user || undefined}
-        onLogout={logout}
-      />
-
-      {/* Desktop Sidebar */}
-      <Sidebar isCollapsed={isCollapsed} user={user!} onLogout={logout} />
-
-      {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-x-hidden">
         <TopBar onSidebarToggle={toggleCollapsed} isSidebarCollapsed={isCollapsed} />
         <main

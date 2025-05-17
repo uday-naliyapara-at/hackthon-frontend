@@ -132,7 +132,7 @@ export class AuthRepository extends BaseRepository implements IAuthRepository {
 
   async register(data: RegisterUserDTO): Promise<AuthResponse> {
     try {
-      return await this.httpClient.post<AuthResponse>(`${this.baseUrl}/register`, data);
+      return await this.httpClient.post<AuthResponse>(`${this.baseUrl}/signup`, data);
     } catch (error) {
       const parsedError = this.handleError(error);
       if (parsedError instanceof ValidationError) {

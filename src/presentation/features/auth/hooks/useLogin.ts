@@ -3,7 +3,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import { LoginDTO } from '../../../../domains/models/user/types';
+import { LoginDTO } from '../../../../domain/models/user/types';
 import { useAuthContext } from '../context/AuthContext';
 import { AUTH_QUERY_KEY } from './useAuth';
 
@@ -19,6 +19,8 @@ interface UseLoginReturn {
   error: Error | null;
   clearError: () => void;
 }
+
+const LOCAL_STORAGE_USER_KEY = 'auth_user';
 
 /**
  * Hook for handling login functionality
@@ -44,10 +46,11 @@ export const useLogin = (options: UseLoginOptions = {}): UseLoginReturn => {
       setIsLoading(true);
       setError(null);
 
-      await authService.login(credentials);
+      const user = await authService.login(credentials);
 
-      // Invalidate auth query to force a refetch
-      await queryClient.invalidateQueries({ queryKey: AUTH_QUERY_KEY });
+      // Store user data in localStorage and cache
+      localStorage.setItem(LOCAL_STORAGE_USER_KEY, JSON.stringify(user));
+      queryClient.setQueryData(AUTH_QUERY_KEY, user);
 
       onSuccess?.();
       navigate(redirectTo);

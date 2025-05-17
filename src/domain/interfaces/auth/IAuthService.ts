@@ -1,4 +1,5 @@
-import { AuthResponse, LoginDTO, RegisterUserDTO, User } from '../../models/user/types';
+import { AuthResponse, LoginDTO, RegisterUserDTO } from '../../models/user/types';
+import { UserEntity } from '../../models/user/User';
 
 /**
  * Handles core authentication operations
@@ -18,7 +19,7 @@ export interface IAuthService {
    * @throws {AccountLockedError} When account is locked
    * @throws {RateLimitError} When too many attempts are made
    */
-  login(credentials: LoginDTO): Promise<User>;
+  login(credentials: LoginDTO): Promise<UserEntity>;
 
   /**
    * Logs out the current user and clears their session
@@ -41,5 +42,5 @@ export interface IAuthService {
    * Gets the currently authenticated user
    * @returns User if authenticated, null otherwise
    */
-  getCurrentUser(): User | null;
+  getCurrentUser(): UserEntity | null;
 }

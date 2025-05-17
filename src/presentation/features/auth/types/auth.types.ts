@@ -11,6 +11,8 @@ export interface SignupFormData {
   email: string;
   password: string;
   confirmPassword: string;
+  team: string;
+  teamId?: number;
 }
 
 export interface ForgotPasswordFormData {

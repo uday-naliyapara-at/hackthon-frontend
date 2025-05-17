@@ -302,7 +302,7 @@ export const authComponents = {
 
 // Export Paths
 export const authPaths = {
-  '/api/auth/register': {
+  '/api/auth/signup': {
     post: {
       tags: ['Auth'],
       summary: 'Register new user',

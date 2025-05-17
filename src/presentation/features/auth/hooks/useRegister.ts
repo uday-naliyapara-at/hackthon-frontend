@@ -20,6 +20,7 @@ export const useRegister = () => {
         lastName: data.lastName,
         email: data.email,
         password: data.password,
+        teamId: data.teamId || 0
       };
 
       const response = await authService.register(registerData);

@@ -3,7 +3,7 @@ import { IAuthService } from '../../../domain/interfaces/auth/IAuthService';
 import { ISessionService } from '../../../domain/interfaces/auth/ISessionService';
 import { Email, Password, UserEntity } from '../../../domain/models/user/User';
 import { AuthResponse, LoginDTO, RegisterUserDTO } from '../../../domain/models/user/types';
-import { ForgotPasswordError, ValidationError } from './errors';
+import { ForgotPasswordError, ValidationError, UnauthorizedError } from './errors';
 
 /**
  * Implements authentication and user management functionality
@@ -55,15 +55,22 @@ export class AuthService implements IAuthService {
     }
 
     const response = await this.authRepository.login(credentials);
+    
+    if (!response.success) {
+      throw new UnauthorizedError(response.message || 'Login failed');
+    }
+
     const userEntity = UserEntity.create({
-      id: response.user.id,
-      email: response.user.email,
-      firstName: response.user.firstName,
-      lastName: response.user.lastName,
-      emailVerified: response.user.emailVerified,
+      ...response.user,
+      emailVerified: true // Since login succeeded, we can assume email is verified
     });
 
-    await this.sessionService.initializeSession(response.tokens);
+    // Store the user ID as a temporary session token
+    await this.sessionService.initializeSession({
+      accessToken: `temp-token-${response.user.id}`,
+      refreshToken: undefined
+    });
+    
     this.currentUser = userEntity;
     return userEntity;
   }

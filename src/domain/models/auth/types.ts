@@ -1,4 +1,5 @@
 import type { User } from '../user/types';
+import { UserEntity } from '../user/User';
 
 /**
  * Email verification related types
@@ -27,7 +28,7 @@ export interface VerificationStatus {
 export interface SessionState {
   isAuthenticated: boolean;
   isLoading: boolean;
-  user: User | null;
+  user: UserEntity | null;
 }
 
 export interface AuthGuardConfig {

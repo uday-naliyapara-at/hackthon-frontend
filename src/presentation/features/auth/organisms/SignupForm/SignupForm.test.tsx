@@ -19,6 +19,7 @@ vi.mock('../../hooks', () => ({
       email: z.string().min(1, 'Email is required').email('Invalid email format'),
       password: z.string().min(1, 'Password is required'),
       confirmPassword: z.string().min(1, 'Please confirm your password'),
+      team: z.string().min(1, 'Please select a team'),
     })
     .refine((data) => data.password === data.confirmPassword, {
       message: 'Passwords do not match',
@@ -110,8 +111,8 @@ describe('SignupForm', () => {
 
       // Wait for validation errors
       await waitFor(() => {
-        const errorMessages = screen.getAllByText(/is required/i);
-        expect(errorMessages).toHaveLength(4); // firstName, lastName, email, password
+        const errorMessages = screen.getAllByText(/is required|select a team/i);
+        expect(errorMessages).toHaveLength(5); // firstName, lastName, email, password, team
       });
     });
 
@@ -142,6 +143,19 @@ describe('SignupForm', () => {
         expect(screen.getByText('Passwords do not match')).toBeInTheDocument();
       });
     });
+
+    it('should validate team selection', async () => {
+      renderSignupForm();
+      const teamSelect = screen.getByLabelText(/team/i);
+
+      // Leave team unselected
+      const submitButton = screen.getByRole('button', { name: /sign up/i });
+      await userEvent.click(submitButton);
+
+      await waitFor(() => {
+        expect(screen.getByText('Please select a team')).toBeInTheDocument();
+      });
+    });
   });
   // #endregion
 
@@ -153,6 +167,7 @@ describe('SignupForm', () => {
       email: 'john.doe@example.com',
       password: 'Password123!',
       confirmPassword: 'Password123!',
+      team: 'engineering',
     };
 
     it('should handle successful form submission', async () => {
@@ -174,6 +189,7 @@ describe('SignupForm', () => {
         screen.getByLabelText(/confirm password/i),
         validFormData.confirmPassword
       );
+      await userEvent.selectOptions(screen.getByLabelText(/team/i), validFormData.team);
 
       const submitButton = screen.getByRole('button', { name: /sign up/i });
       await userEvent.click(submitButton);

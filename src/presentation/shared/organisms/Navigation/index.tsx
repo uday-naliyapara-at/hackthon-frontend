@@ -35,13 +35,13 @@ export function Navigation({
 
   return (
     <nav className={cn('flex flex-col h-full', className)}>
-      <OrganizationHeader
+      {/* <OrganizationHeader
         name={ORGANIZATION.name}
         type={ORGANIZATION.type}
         isCollapsed={isCollapsed}
         onMenuClick={onOrganizationMenuClick}
-      />
-      <div className="flex-1 px-2 py-4">
+      /> */}
+      {/* <div className="flex-1 px-2 py-4">
         <div className="space-y-4">
           <NavSection
             title={NAV_SECTIONS.platform.title}
@@ -60,7 +60,7 @@ export function Navigation({
             isCollapsed={isCollapsed}
           />
         </div>
-      </div>
+      </div> */}
     </nav>
   );
 }

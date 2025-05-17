@@ -15,6 +15,7 @@ export const LoginPage = () => {
             <div className="p-6 md:p-8">
               <LoginForm
                 signUpUrl="/auth/signup"
+                redirectTo="/home"
                 // forgotPasswordUrl="/auth/forgot-password"
               />
             </div>

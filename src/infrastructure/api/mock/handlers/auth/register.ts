@@ -9,7 +9,7 @@ import { COMMON_ERRORS } from '../constants';
 import { AUTH_ERRORS } from './constants';
 
 export const registerHandler = http.post<never, RegisterResponse>(
-  '/api/auth/register',
+  '/auth/signup',
   async ({ request }) => {
     try {
       const result = RegisterRequestSchema.safeParse(await request.json());

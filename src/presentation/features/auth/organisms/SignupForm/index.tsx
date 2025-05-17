@@ -1,4 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useState } from 'react';
+import { MdKeyboardArrowDown } from 'react-icons/md';
 
 import { useForm } from 'react-hook-form';
 
@@ -6,6 +8,12 @@ import { Button } from '@/presentation/shared/atoms/Button';
 import { Link } from '@/presentation/shared/atoms/Link';
 import { FormField } from '@/presentation/shared/molecules/FormField';
 import { PasswordField } from '@/presentation/shared/molecules/PasswordField';
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from '@/components/ui/dropdown-menu';
 
 import { signupSchema, useAuthErrors, useRegister } from '../../hooks';
 import type { SignupFormData, SignupFormProps } from '../../types/auth.types';
@@ -17,12 +25,22 @@ export const SignupForm = ({
 }: SignupFormProps) => {
   const { register: signUp, isLoading } = useRegister();
   const { error: authError, handleAuthError, clearError } = useAuthErrors();
+  const [selectedTeam, setSelectedTeam] = useState('');
+
+  const teams = [
+    { team: 'Engineering', teamId: 1 },
+    { team: 'Design', teamId: 2 },
+    { team: 'Product', teamId: 3 },
+    { team: 'Marketing', teamId: 4 },
+    { team: 'Sales', teamId: 5 }
+  ];
 
   const {
     register,
     handleSubmit,
     formState: { errors },
     setError,
+    setValue,
   } = useForm<SignupFormData>({
     resolver: zodResolver(signupSchema),
     defaultValues: {
@@ -31,6 +49,8 @@ export const SignupForm = ({
       email: '',
       password: '',
       confirmPassword: '',
+      team: '',
+      teamId: 0,
     },
   });
 
@@ -41,11 +61,9 @@ export const SignupForm = ({
       onSignupSuccess(response.user.email);
     } catch (err) {
       const errorData = handleAuthError(err);
-      // Show error in toast regardless of type
       if (onError && errorData?.message) {
         onError(errorData.message);
       }
-      // Also show field error in form if applicable
       if (errorData?.field) {
         setError(errorData.field as keyof SignupFormData, {
           type: 'manual',
@@ -80,6 +98,53 @@ export const SignupForm = ({
             errorMessage={errors.lastName?.message}
             {...register('lastName')}
           />
+        </div>
+
+        <div className="space-y-2 relative">
+          <label htmlFor="team" className="block text-sm font-medium">
+            Team
+          </label>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button 
+                type="button"
+                variant="outline" 
+                className="w-full justify-between bg-white border border-input hover:bg-white"
+              >
+                <span className="text-left truncate">
+                  {selectedTeam || 'Select a team'}
+                </span>
+                <MdKeyboardArrowDown className="ml-2 h-5 w-5 shrink-0 opacity-50" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent 
+              align="start"
+              sideOffset={4}
+              className="bg-white z-50"
+              style={{ 
+                width: '100%',
+                minWidth: '335px',
+                maxWidth: '100%'
+              }}
+            >
+              {teams.map((teamItem) => (
+                <DropdownMenuItem 
+                  key={teamItem.teamId}
+                  className="py-2.5 hover:bg-gray-100 focus:bg-gray-100 cursor-pointer"
+                  onClick={() => {
+                    setSelectedTeam(teamItem.team);
+                    setValue('team', teamItem.team.toLowerCase());
+                    setValue('teamId', teamItem.teamId);
+                  }}
+                >
+                  {teamItem.team}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+          {errors.team && (
+            <p className="text-sm text-destructive">{errors.team.message}</p>
+          )}
         </div>
 
         <FormField
@@ -120,14 +185,12 @@ export const SignupForm = ({
         </Button>
       </form>
 
-
       <div className="text-center text-sm">
         Already have an account?{' '}
         <Link to={loginUrl} className="underline underline-offset-4">
           Login
         </Link>
       </div>
-
     </div>
   );
 };
