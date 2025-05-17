@@ -1,13 +1,8 @@
 /**
  * Type of kudos that can be given
+ * Can be any string to support dynamic category names from the API
  */
-export type KudosType = 
-  | 'Well Done'
-  | 'Great Teamwork'
-  | 'Proud of You'
-  | 'Outstanding Achievement'
-  | 'Brilliant Idea'
-  | 'Amazing Support';
+export type KudosType = string;
 
 /**
  * Icon mapping for each kudos type

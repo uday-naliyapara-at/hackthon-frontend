@@ -1,21 +1,18 @@
 import React from 'react';
 import { format } from 'date-fns';
-import { IconType } from 'react-icons';
-import { HiTrophy, HiUserGroup, HiStar, HiRocketLaunch, HiLightBulb, HiHeart } from 'react-icons/hi2';
 
-import { type Kudos, type KudosType } from '@/domain/models/kudos/types';
-import { KUDOS_THEMES } from '@/infrastructure/api/mock/data/kudos.data';
+import { type Kudos } from '@/domain/models/kudos/types'
 import { cn } from '@/lib/utils';
 import { Icon } from '@/presentation/shared/atoms/Icon';
+import { HiSparkles } from 'react-icons/hi2';
 
-const KUDOS_ICONS: Record<KudosType, IconType> = {
-  'Well Done': HiTrophy,
-  'Great Teamwork': HiUserGroup,
-  'Proud of You': HiStar,
-  'Outstanding Achievement': HiRocketLaunch,
-  'Brilliant Idea': HiLightBulb,
-  'Amazing Support': HiHeart,
+// Default theme for unknown kudos types
+const DEFAULT_THEME = {
+  bgColor: 'bg-gray-50',
+  iconColor: 'text-gray-500',
+  textColor: 'text-gray-700'
 };
+
 
 interface KudoCardProps {
   kudos: Kudos;
@@ -23,8 +20,8 @@ interface KudoCardProps {
 }
 
 export const KudoCard: React.FC<KudoCardProps> = ({ kudos, className }) => {
-  const theme = KUDOS_THEMES[kudos.type];
-  const KudosIcon = KUDOS_ICONS[kudos.type];
+  const theme = DEFAULT_THEME;
+  const KudosIcon = HiSparkles;
 
   return (
     <div 

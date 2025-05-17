@@ -1,40 +1,8 @@
-import { Kudos, KudosTheme, KudosType } from '@/domain/models/kudos/types';
+import { Kudos } from '@/domain/models/kudos/types';
 
 /**
  * Theme configuration for each kudos type
  */
-export const KUDOS_THEMES: Record<KudosType, KudosTheme> = {
-  'Well Done': {
-    bgColor: 'bg-purple-50',
-    iconColor: 'text-purple-500',
-    textColor: 'text-purple-700'
-  },
-  'Great Teamwork': {
-    bgColor: 'bg-blue-50',
-    iconColor: 'text-blue-500',
-    textColor: 'text-blue-700'
-  },
-  'Proud of You': {
-    bgColor: 'bg-green-50',
-    iconColor: 'text-green-500',
-    textColor: 'text-green-700'
-  },
-  'Outstanding Achievement': {
-    bgColor: 'bg-red-50',
-    iconColor: 'text-red-500',
-    textColor: 'text-red-700'
-  },
-  'Brilliant Idea': {
-    bgColor: 'bg-yellow-50',
-    iconColor: 'text-yellow-600',
-    textColor: 'text-yellow-700'
-  },
-  'Amazing Support': {
-    bgColor: 'bg-teal-50',
-    iconColor: 'text-teal-500',
-    textColor: 'text-teal-700'
-  }
-};
 
 /**
  * Mock kudos data
