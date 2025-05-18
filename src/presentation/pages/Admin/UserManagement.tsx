@@ -161,7 +161,7 @@ export function UserManagementPage() {
     mutationFn: async (userId: number) => {
       // Implementing a custom fetch since our httpClient doesn't support DELETE with a body
       const accessToken = localStorage.getItem('accessToken');
-      const baseUrl = import.meta.env.VITE_API_BASE_URL || '';
+      const baseUrl = 'https://hackathon-backend-h5uq.onrender.com/api/public';
       
       // Create URLSearchParams for form-urlencoded body
       const formData = new URLSearchParams();

@@ -5,7 +5,7 @@ import { modelProviderComponents, modelProviderPaths } from './model-providers';
 import { userManagementSchema } from './user-management';
 
 // Get the real API base URL from environment variables
-const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
+const apiBaseUrl = 'https://hackathon-backend-h5uq.onrender.com/api/public';
 
 // For development, the mock API typically runs on port 5173
 const mockServerUrl = 'http://localhost:5173';

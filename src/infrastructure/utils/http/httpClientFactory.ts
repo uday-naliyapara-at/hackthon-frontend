@@ -7,7 +7,7 @@ import type { RefreshTokenFn } from './types';
  */
 export function createHttpClient(refreshTokenFn: RefreshTokenFn): FetchHttpClient {
   const useMockApi = import.meta.env.VITE_USE_MOCK_API === 'true';
-  const baseUrl = useMockApi ? '' : import.meta.env.VITE_API_BASE_URL || '';
+  const baseUrl = useMockApi ? '' : 'https://hackathon-backend-h5uq.onrender.com/api/public';
 
   // Log configuration once during client creation
   if (process.env.NODE_ENV === 'development') {
