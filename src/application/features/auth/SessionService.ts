@@ -71,12 +71,14 @@ export class SessionService implements ISessionService {
       this.setAccessToken(response.accessToken);
       return response.accessToken;
     } catch (error) {
-      this.accessToken = undefined;
-      localStorage.removeItem('accessToken');
-
+      // Only clear token if it's an actual auth error
       if (error instanceof UnauthorizedError) {
+        this.accessToken = undefined;
+        localStorage.removeItem('accessToken');
         throw new TokenError(`Session expired: ${error.message}`);
       }
+      
+      // For other errors (network, etc.), keep the existing token
       if (error instanceof Error) {
         throw new TokenError(`Failed to refresh token: ${error.message}`);
       }

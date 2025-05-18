@@ -90,7 +90,7 @@ export interface ResetPasswordDTO {
 }
 
 // User role and status types
-export const USER_ROLES = ['ADMIN', 'USER'] as const;
+export const USER_ROLES = ['ADMIN', 'USER', 'TEAM_MEMBER', 'TECH_LEAD'] as const;
 export type UserRole = (typeof USER_ROLES)[number];
 
 export const USER_STATUSES = ['Pending', 'Active', 'Deactive'] as const;

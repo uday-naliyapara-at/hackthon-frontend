@@ -94,9 +94,11 @@ export class RequestQueueManager {
       // Reset retry count on success
       this.refreshRetryCount = 0;
 
-      // Update token in storage
-      localStorage.setItem('accessToken', newToken);
-      console.log('Token refresh successful');
+      // Only update token in storage if we got a valid new token
+      if (newToken) {
+        localStorage.setItem('accessToken', newToken);
+        console.log('Token refresh successful');
+      }
 
       // Process pending requests
       await this.processQueue();

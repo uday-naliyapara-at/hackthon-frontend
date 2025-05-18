@@ -2,7 +2,7 @@ import { forgotPasswordHandler } from './forgot-password';
 import { loginHandler } from './login';
 import { logoutHandler } from './logout';
 import { getCurrentUserHandler } from './me';
-import { refreshTokenHandler } from './refresh';
+// import { refreshTokenHandler } from './refresh';
 import { registerHandler } from './register';
 import { resendVerificationHandler } from './resend-verification';
 import { resetPasswordHandler } from './reset-password';
@@ -12,7 +12,7 @@ export const authHandlers = [
   registerHandler,
   loginHandler,
   logoutHandler,
-  refreshTokenHandler,
+  // refreshTokenHandler,
   verifyEmailHandler,
   forgotPasswordHandler,
   resetPasswordHandler,

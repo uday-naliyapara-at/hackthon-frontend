@@ -45,6 +45,17 @@ export interface IUserManagementRepository {
   getUsersWithParams(params?: UserQueryParams): Promise<UserPaginationResponse>;
 
   /**
+   * Update user's role
+   * @param userId ID of the user to update
+   * @param role New role to assign
+   * @returns Updated user entity
+   * @throws {UnauthorizedError} When authentication is invalid
+   * @throws {ForbiddenError} When user does not have admin privileges
+   * @throws {NotFoundError} When user is not found
+   */
+  updateUserRole(userId: number, role: 'USER' | 'TEAM_MEMBER'): Promise<User>;
+
+  /**
    * Activate a pending user
    * @param userId User ID to activate
    * @throws {UnauthorizedError} When authentication is invalid
@@ -63,4 +74,15 @@ export interface IUserManagementRepository {
    * @throws {ValidationError} When user status is not active
    */
   deactivateUser(userId: string): Promise<User>;
+
+  /**
+   * Update user's team role
+   * @param teamId ID of the team
+   * @param role New role to assign
+   * @returns Updated user entity
+   * @throws {UnauthorizedError} When authentication is invalid
+   * @throws {ForbiddenError} When user does not have admin privileges
+   * @throws {NotFoundError} When user is not found
+   */
+  updateTeamRole(teamId: number, role: 'TEAM_MEMBER' | 'TECH_LEAD'): Promise<User>;
 }

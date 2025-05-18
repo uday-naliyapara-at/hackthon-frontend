@@ -34,7 +34,7 @@ export class UserManagementRepository
   extends BaseRepository
   implements IUserManagementRepository, IUserManagementService
 {
-  private readonly baseUrl = '/api/users';
+  private readonly baseUrl = '/users';
 
   constructor(httpClient: IHttpClient) {
     super(httpClient);
@@ -46,8 +46,12 @@ export class UserManagementRepository
    * @returns Array of users
    */
   async getAllUsers(): Promise<User[]> {
-    const response = await this.getUsersWithParams();
-    return response.users;
+    try {
+      const response = await this.httpClient.get<{ success: boolean; data: { users: User[] } }>(this.baseUrl);
+      return response.data.users;
+    } catch (error) {
+      throw this.handleError(error);
+    }
   }
 
   /**
@@ -69,8 +73,16 @@ export class UserManagementRepository
       const queryString = queryParams.toString();
       const url = queryString ? `${this.baseUrl}?${queryString}` : this.baseUrl;
 
-      const response = await this.httpClient.get<UserPaginationResponse>(url);
-      return response;
+      const response = await this.httpClient.get<{ success: boolean; data: { users: User[]; total: number } }>(url);
+      return {
+        users: response.data.users,
+        pagination: {
+          page: params?.page || 1,
+          limit: params?.limit || 10,
+          totalItems: response.data.total,
+          totalPages: Math.ceil(response.data.total / (params?.limit || 10))
+        }
+      };
     } catch (error) {
       throw this.handleError(error);
     }
@@ -103,6 +115,36 @@ export class UserManagementRepository
         `${this.baseUrl}/${userId}/deactivate`,
         {}
       );
+      return response;
+    } catch (error) {
+      throw this.handleError(error);
+    }
+  }
+
+  /**
+   * Update user's role
+   * @param userId ID of the user to update
+   * @param role New role to assign
+   * @returns Updated user entity
+   */
+  async updateUserRole(userId: number, role: 'USER' | 'TEAM_MEMBER'): Promise<User> {
+    try {
+      const response = await this.httpClient.patch<User>(`${this.baseUrl}/${userId}/role`, { role });
+      return response;
+    } catch (error) {
+      throw this.handleError(error);
+    }
+  }
+
+  /**
+   * Update user's team role
+   * @param teamId ID of the team
+   * @param role New role to assign
+   * @returns Updated user entity
+   */
+  async updateTeamRole(teamId: number, role: 'TEAM_MEMBER' | 'TECH_LEAD'): Promise<User> {
+    try {
+      const response = await this.httpClient.patch<User>(`${this.baseUrl}/${teamId}/role`, { role });
       return response;
     } catch (error) {
       throw this.handleError(error);

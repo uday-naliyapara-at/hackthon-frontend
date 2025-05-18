@@ -195,13 +195,13 @@ export class AuthRepository extends BaseRepository implements IAuthRepository {
     }
   }
 
-  async refreshToken(): Promise<{ accessToken: string }> {
-    try {
-      return await this.httpClient.post<{ accessToken: string }>(`${this.baseUrl}/refresh`, {});
-    } catch (error) {
-      throw this.handleError(error);
-    }
-  }
+  // async refreshToken(): Promise<{ accessToken: string }> {
+  //   try {
+  //     return await this.httpClient.post<{ accessToken: string }>(`${this.baseUrl}/refresh`, {});
+  //   } catch (error) {
+  //     throw this.handleError(error);
+  //   }
+  // }
 
   /**
    * Initiates password reset process by sending reset instructions to email

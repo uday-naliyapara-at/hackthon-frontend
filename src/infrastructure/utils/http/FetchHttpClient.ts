@@ -97,7 +97,7 @@ export class FetchHttpClient implements IHttpClient {
 
     const token = localStorage.getItem('accessToken');
     if (token) {
-      headers.Authorization = `Bearer ${token}`;
+      headers.Authorization = `${token}`;
     }
 
     return headers;

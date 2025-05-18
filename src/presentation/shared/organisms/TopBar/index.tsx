@@ -1,7 +1,7 @@
 import { cn } from '@/lib/utils';
 import { type User } from '@/domain/models/user/types';
 import { Icon } from '../../atoms/Icon';
-import {  HiUser, HiArrowRightOnRectangle, HiTrophy, HiChartBar } from 'react-icons/hi2';
+import {  HiUser, HiArrowRightOnRectangle, HiTrophy, HiChartBar, HiUserGroup } from 'react-icons/hi2';
 import { UserAvatar } from '../../atoms/UserAvatar';
 import {
   DropdownMenu,
@@ -18,23 +18,17 @@ export interface TopBarProps {
   className?: string;
   user: User;
   onLogout?: () => void;
-  onProfileClick?: () => void;
 }
 
 export function TopBar({ 
   className, 
   user, 
-  onLogout, 
-  onProfileClick
+  onLogout
 }: TopBarProps) {
   const handleLogout = () => {
     localStorage.clear();
     window.location.reload();
     onLogout?.();
-  };
-
-  const handleProfileClick = () => {
-    onProfileClick?.();
   };
 
   return (
@@ -61,12 +55,14 @@ export function TopBar({
               align="end" 
               className="w-48 bg-white border border-gray-200 shadow-lg rounded-md"
             >
-              <DropdownMenuItem 
-                onClick={handleProfileClick} 
-                className="cursor-pointer hover:bg-gray-50 focus:bg-gray-50"
-              >
-                <Icon icon={HiUser} className="w-4 h-4 mr-2" />
-                Profile
+              <DropdownMenuItem asChild>
+                <Link 
+                  to="/profile" 
+                  className="flex items-center w-full cursor-pointer hover:bg-gray-50 focus:bg-gray-50"
+                >
+                  <Icon icon={HiUser} className="w-4 h-4 mr-2" />
+                  Profile
+                </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
                 <Link 
@@ -77,6 +73,17 @@ export function TopBar({
                   Analytics Dashboard
                 </Link>
               </DropdownMenuItem>
+              {user.role === 'ADMIN' && (
+                <DropdownMenuItem asChild>
+                  <Link 
+                    to="/admin/users" 
+                    className="flex items-center w-full cursor-pointer hover:bg-gray-50 focus:bg-gray-50"
+                  >
+                    <Icon icon={HiUserGroup} className="w-4 h-4 mr-2" />
+                    User Management
+                  </Link>
+                </DropdownMenuItem>
+              )}
               <DropdownMenuSeparator className="bg-gray-200" />
               <DropdownMenuItem 
                 onClick={handleLogout} 
