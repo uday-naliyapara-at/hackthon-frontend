@@ -7,10 +7,10 @@ import { Alert, AlertTitle, AlertDescription } from '@/presentation/shared/atoms
 import { LoadingSpinner } from '@/presentation/shared/atoms/LoadingSpinner/LoadingSpinner';
 import { Kudos } from '@/domain/models/kudos/types';
 import { useDebounce } from '@/presentation/hooks/useDebounce';
-import { Link } from '../../shared/atoms/Link/index.tsx';
-import { HiChartPie } from 'react-icons/hi2';
 import styles from './Home.module.css';
 import { Button } from '@/components/ui/button';
+import { HiArrowLongRight } from 'react-icons/hi2';
+import { Icon } from '@/presentation/shared/atoms';
 
 // Define breakpoints for responsive masonry layout
 const breakpointColumns = {
@@ -31,7 +31,7 @@ export const HomePage: React.FC = () => {
   const [hasMore, setHasMore] = useState(true);
   const [page, setPage] = useState(1);
   const PAGE_SIZE = 9;
-  
+
   // Filter states
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTeamId, setSelectedTeamId] = useState(0);
@@ -48,7 +48,7 @@ export const HomePage: React.FC = () => {
         setIsLoadingMore(true);
       }
       setError(null);
-      const response = await kudosRepository.getAllKudos({ 
+      const response = await kudosRepository.getAllKudos({
         teamId,
         sortOrder: sortOrder === 'recent' ? 'asc' : 'desc',
         page,
@@ -57,7 +57,7 @@ export const HomePage: React.FC = () => {
 
       // Update hasMore based on whether we received less items than the page size
       setHasMore(response.length === PAGE_SIZE);
-      
+
       // If loading more, append to existing kudos, otherwise replace
       setKudos(prevKudos => isLoadMore ? [...prevKudos, ...response] : response);
     } catch (err) {
@@ -93,7 +93,7 @@ export const HomePage: React.FC = () => {
       try {
         setIsSearching(true);
         setError(null);
-        const results = await kudosRepository.searchKudos(debouncedSearchQuery, { 
+        const results = await kudosRepository.searchKudos(debouncedSearchQuery, {
           teamId: selectedTeamId,
           page: 1,
           limit: PAGE_SIZE
@@ -114,7 +114,7 @@ export const HomePage: React.FC = () => {
 
   const handleLoadMore = useCallback(() => {
     if (!hasMore || isLoadingMore || isSearching) return;
-    
+
     setPage(prevPage => prevPage + 1);
     if (debouncedSearchQuery) {
       // Handle load more for search
@@ -158,12 +158,21 @@ export const HomePage: React.FC = () => {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <KudoFilters
-        onSearch={handleSearch}
-        onTeamFilter={handleTeamFilter}
-        onSort={setSortOrder}
-      />
-      
+      <div className="flex justify-end justify-between items-center">
+        <Button
+          size="lg"
+          className="bg-white text-purple-600 hover:bg-purple-50 hover:text-purple-700 transition-all duration-200 group"
+        >
+          <span>Give Kudos</span>
+          <Icon icon={HiArrowLongRight} className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
+        </Button>
+        <KudoFilters
+          onSearch={handleSearch}
+          onTeamFilter={handleTeamFilter}
+          onSort={setSortOrder}
+        />
+      </div>
+
       {error ? (
         <Alert variant="destructive" className="mt-6">
           <AlertTitle>Error</AlertTitle>
@@ -188,7 +197,7 @@ export const HomePage: React.FC = () => {
                   </div>
                 ))}
               </Masonry>
-              
+
               {sortedKudos.length === 0 ? (
                 <div className="text-center text-gray-500 py-8">
                   No kudos found matching your filters.

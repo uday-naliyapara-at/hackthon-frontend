@@ -2,16 +2,17 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { type User } from '@/domain/models/user/types';
 import { useUserManagementService } from '@/presentation/features/admin/context/UserManagementContext';
+import { UserQueryParams, UserPaginationResponse } from '@/domain/interfaces/user/IUserManagementRepository';
 
 export const USER_MANAGEMENT_QUERY_KEY = ['users'] as const;
 
-export function useUserManagement() {
+export function useUserManagement(params?: UserQueryParams) {
   const userManagementService = useUserManagementService();
   const queryClient = useQueryClient();
 
-  const { data: users, isLoading, error } = useQuery<User[]>({
-    queryKey: USER_MANAGEMENT_QUERY_KEY,
-    queryFn: () => userManagementService.getAllUsers(),
+  const { data, isLoading, error } = useQuery<UserPaginationResponse>({
+    queryKey: [...USER_MANAGEMENT_QUERY_KEY, params],
+    queryFn: () => userManagementService.getUsersWithParams(params),
   });
 
   const { mutate: updateUserRole } = useMutation({
@@ -31,7 +32,8 @@ export function useUserManagement() {
   });
 
   return {
-    users,
+    users: data?.users || [],
+    pagination: data?.pagination || { page: 1, limit: 10, totalItems: 0, totalPages: 0 },
     isLoading,
     error,
     updateUserRole,

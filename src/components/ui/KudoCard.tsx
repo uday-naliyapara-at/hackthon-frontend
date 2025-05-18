@@ -24,7 +24,7 @@ export const KudoCard: React.FC<KudoCardProps> = ({ kudos, className }) => {
   const KudosIcon = HiSparkles;
 
   return (
-    <div 
+    <div
       className={cn(
         'rounded-lg p-6 shadow-sm border',
         theme.bgColor,
@@ -33,8 +33,8 @@ export const KudoCard: React.FC<KudoCardProps> = ({ kudos, className }) => {
     >
       {/* Header with kudos type and icon */}
       <div className="flex items-center gap-2 mb-4">
-        <Icon 
-          icon={KudosIcon} 
+        <Icon
+          icon={KudosIcon}
           className={cn('w-5 h-5', theme.iconColor)}
         />
         <h3 className={cn('text-lg font-semibold', theme.textColor)}>

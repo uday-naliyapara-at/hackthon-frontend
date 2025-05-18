@@ -22,6 +22,7 @@ export interface UserQueryParams {
   status?: 'Pending' | 'Active' | 'Deactive';
   sortBy?: 'createdAt' | 'firstName' | 'lastName' | 'email' | 'status';
   sortOrder?: 'asc' | 'desc';
+  searchText?: string;
 }
 
 /**

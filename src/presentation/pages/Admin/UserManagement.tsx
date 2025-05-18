@@ -1,5 +1,6 @@
-import { useState } from 'react';
-import { HiMagnifyingGlass } from 'react-icons/hi2';
+import { useState, useEffect, useCallback } from 'react';
+import { HiMagnifyingGlass, HiChevronLeft, HiChevronRight } from 'react-icons/hi2';
+import debounce from 'lodash/debounce';
 
 import { Button } from '@/presentation/shared/atoms/Button';
 import { Input } from '@/presentation/shared/atoms/Input';
@@ -11,16 +12,26 @@ import { UserRole } from '@/domain/models/user/types';
 
 export function UserManagementPage() {
   const [searchQuery, setSearchQuery] = useState('');
-  const { users, isLoading, updateUserRole, updateTeamRole } = useUserManagement();
+  const [currentPage, setCurrentPage] = useState(1);
+  const { users, pagination, isLoading, updateUserRole, updateTeamRole } = useUserManagement({
+    page: currentPage,
+    limit: 10,
+    searchText: searchQuery,
+  });
   const { teamService } = useTeamContext();
   const { data: teams, isLoading: isLoadingTeams } = useTeams(teamService);
+
+  // Reset page when search query changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery]);
 
   // Create a map of team IDs to team names
   const teamMap = new Map(teams?.map(team => [team.id, team.name]) || []);
 
   const handleRoleToggle = (userId: number, currentRole: UserRole, teamId: number | null) => {
     if (currentRole === 'ADMIN') return; // Don't toggle admin roles
-    
+
     if (currentRole === 'TEAM_MEMBER' || currentRole === 'TECH_LEAD') {
       // Toggle between TEAM_MEMBER and TECH_LEAD
       if (teamId) {
@@ -34,6 +45,22 @@ export function UserManagementPage() {
     }
   };
 
+  const handlePageChange = (newPage: number) => {
+    setCurrentPage(newPage);
+  };
+
+  // Debounced search handler
+  const debouncedSearch = useCallback(
+    debounce((value: string) => {
+      setSearchQuery(value);
+    }, 300),
+    []
+  );
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    debouncedSearch(e.target.value);
+  };
+
   return (
     <div className="container mx-auto py-8">
       <div className="flex justify-between items-center mb-8">
@@ -43,8 +70,7 @@ export function UserManagementPage() {
             <Input
               type="text"
               placeholder="Search users..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={handleSearchChange}
               className="pr-4 py-2 w-64"
             />
           </div>
@@ -106,17 +132,16 @@ export function UserManagementPage() {
                     <button
                       onClick={() => handleRoleToggle(user.id, user.role, user.teamId)}
                       disabled={user.role === 'ADMIN'}
-                      className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                        user.role === 'ADMIN'
-                          ? 'bg-purple-100 text-purple-800 cursor-not-allowed'
-                          : user.role === 'TECH_LEAD'
+                      className={`px-3 py-1 rounded-full text-xs font-semibold ${user.role === 'ADMIN'
+                        ? 'bg-purple-100 text-purple-800 cursor-not-allowed'
+                        : user.role === 'TECH_LEAD'
                           ? 'bg-blue-100 text-blue-800 hover:bg-blue-200'
                           : user.role === 'TEAM_MEMBER'
-                          ? 'bg-green-100 text-green-800 hover:bg-green-200'
-                          : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
-                      }`}
+                            ? 'bg-green-100 text-green-800 hover:bg-green-200'
+                            : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
+                        }`}
                     >
-                      {user.role}
+                      {user.role === 'ADMIN' ? 'Admin' : user.role === 'TECH_LEAD' ? 'Tech Lead' : 'Team Member'}
                     </button>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
@@ -128,6 +153,35 @@ export function UserManagementPage() {
               ))}
             </tbody>
           </table>
+
+          {/* Pagination Controls */}
+          <div className="px-6 py-4 flex items-center justify-between border-t border-gray-200">
+            <div className="flex-1 flex justify-between items-center">
+              <p className="text-sm text-gray-700">
+                Showing page {pagination.page} of {pagination.totalPages}
+              </p>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handlePageChange(pagination.page - 1)}
+                  disabled={pagination.page <= 1}
+                >
+                  <HiChevronLeft className="h-5 w-5" />
+                  Previous
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handlePageChange(pagination.page + 1)}
+                  disabled={pagination.page >= pagination.totalPages}
+                >
+                  Next
+                  <HiChevronRight className="h-5 w-5" />
+                </Button>
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </div>

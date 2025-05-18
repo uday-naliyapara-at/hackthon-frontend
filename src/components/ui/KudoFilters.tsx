@@ -28,14 +28,14 @@ export const KudoFilters: React.FC<KudoFiltersProps> = ({
   const { data: teams, isLoading: isLoadingTeams, error: teamsError } = useTeams(teamService);
 
   return (
-    <div className="mb-6">
-      <div className="flex flex-col md:flex-row gap-4" style={{flexDirection: 'row-reverse'}}>
+    <div className="">
+      <div className="flex flex-col md:flex-row gap-4 items-center" style={{ flexDirection: 'row-reverse' }}>
 
         {/* Sort Dropdown */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               className="min-w-[180px] justify-between bg-gray-50 hover:bg-white"
             >
               <div className="flex items-center gap-2">
@@ -46,8 +46,8 @@ export const KudoFilters: React.FC<KudoFiltersProps> = ({
               <MdKeyboardArrowDown className="w-5 h-5 shrink-0 opacity-50" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent 
-            align="end" 
+          <DropdownMenuContent
+            align="end"
             className="w-[280px] bg-white shadow-lg rounded-md"
           >
             <div className="py-2 px-3 border-b border-gray-100">
@@ -76,11 +76,11 @@ export const KudoFilters: React.FC<KudoFiltersProps> = ({
           </DropdownMenuContent>
         </DropdownMenu>
 
-{/* Team Filter Dropdown */}
-<DropdownMenu>
+        {/* Team Filter Dropdown */}
+        <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               className="min-w-[180px] justify-between bg-gray-50 hover:bg-white"
             >
               <div className="flex items-center gap-2">
@@ -91,15 +91,15 @@ export const KudoFilters: React.FC<KudoFiltersProps> = ({
               <MdKeyboardArrowDown className="w-5 h-5 shrink-0 opacity-50" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent 
-            align="end" 
+          <DropdownMenuContent
+            align="end"
             className="w-[280px] bg-white shadow-lg rounded-md"
           >
             <div className="py-2 px-3 border-b border-gray-100">
               <h3 className="text-sm font-medium text-gray-700">Select Team</h3>
             </div>
             <div className="py-2">
-              <DropdownMenuItem 
+              <DropdownMenuItem
                 onClick={() => {
                   setSelectedTeam('All Teams');
                   onTeamFilter(0);
@@ -125,21 +125,17 @@ export const KudoFilters: React.FC<KudoFiltersProps> = ({
         </DropdownMenu>
 
         {/* Search Input */}
-        <div className="md:w-64">
-  <div className="relative">
-    <Input
-      type="text"
-      placeholder="Search kudos..."
-      className=" w-full bg-gray-50 focus:bg-white transition-colors"
-      onChange={(e) => onSearch(e.target.value)}
-    />
-  </div>
-</div>
-
-
-        
-
-        
+        <div className="w-full">
+          <div className="w-full flex invisible">
+            Search
+          </div>
+          <Input
+            type="text"
+            placeholder="Search kudos..."
+            className=" w-full bg-gray-50 focus:bg-white transition-colors"
+            onChange={(e) => onSearch(e.target.value)}
+          />
+        </div>
       </div>
     </div>
   );

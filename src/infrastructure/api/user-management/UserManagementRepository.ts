@@ -129,7 +129,10 @@ export class UserManagementRepository
    */
   async updateUserRole(userId: number, role: 'USER' | 'TEAM_MEMBER'): Promise<User> {
     try {
-      const response = await this.httpClient.patch<User>(`${this.baseUrl}/${userId}/role`, { role });
+      const response = await this.httpClient.post<User>(`${this.baseUrl}/updateRole`, {
+        userId,
+        role
+      });
       return response;
     } catch (error) {
       throw this.handleError(error);
@@ -142,9 +145,9 @@ export class UserManagementRepository
    * @param role New role to assign
    * @returns Updated user entity
    */
-  async updateTeamRole(teamId: number, role: 'TEAM_MEMBER' | 'TECH_LEAD'): Promise<User> {
+  async updateTeamRole(userId: number, role: 'TEAM_MEMBER' | 'TECH_LEAD'): Promise<User> {
     try {
-      const response = await this.httpClient.patch<User>(`${this.baseUrl}/${teamId}/role`, { role });
+      const response = await this.httpClient.patch<User>(`${this.baseUrl}/updateRole`, { role, userId });
       return response;
     } catch (error) {
       throw this.handleError(error);
