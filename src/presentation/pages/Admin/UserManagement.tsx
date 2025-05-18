@@ -572,16 +572,6 @@ export function UserManagementPage() {
     <div className="container mx-auto py-8">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-2xl font-bold">Admin Management</h1>
-        <div className="flex gap-4">
-          <div className="relative">
-            <Input
-              type="text"
-              placeholder={activeTab === 'user-management' ? "Search users..." : "Search teams..."}
-              onChange={handleSearchChange}
-              className="pr-4 py-2 w-64"
-            />
-          </div>
-        </div>
       </div>
 
       <Tabs defaultValue="user-management" onValueChange={setActiveTab} className="w-full">
@@ -603,6 +593,16 @@ export function UserManagementPage() {
         </TabsList>
         
         <TabsContent value="user-management" className="mt-6">
+        <div className="flex justify-end">
+                <div className="relative">
+            <Input
+              type="text"
+              placeholder="Search users..."
+              onChange={handleSearchChange}
+              className="pr-4 py-2 w-64"
+            />
+          </div>
+              </div>
           {isLoading || isLoadingTeams ? (
             <div className="flex justify-center items-center h-64">
               <LoadingSpinner size="lg" className="text-primary" />
@@ -657,10 +657,10 @@ export function UserManagementPage() {
                           className={`px-3 py-1 rounded-full text-xs font-semibold ${user.role === 'ADMIN'
                             ? 'bg-purple-100 text-purple-800 cursor-not-allowed'
                             : user.role === 'TECH_LEAD'
-                              ? 'bg-blue-100 text-blue-800 hover:bg-blue-200'
+                              ? 'bg-blue-100 text-blue-800 hover:bg-blue-200 cursor-not-allowed'
                               : user.role === 'TEAM_MEMBER'
-                                ? 'bg-green-100 text-green-800 hover:bg-green-200'
-                                : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
+                                ? 'bg-green-100 text-green-800 hover:bg-green-200 cursor-not-allowed'
+                                : 'bg-gray-100 text-gray-800 hover:bg-gray-200 cursor-not-allowed'
                             }`}
                         >
                           {user.role === 'ADMIN' ? 'Admin' : user.role === 'TECH_LEAD' ? 'Tech Lead' : 'Team Member'}

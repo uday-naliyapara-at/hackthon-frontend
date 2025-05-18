@@ -72,7 +72,7 @@ export const HomePage: React.FC = () => {
 
   const userInfo = getUserInfo();
   console.log('Current User Role:', userInfo?.role);
-  const canGiveKudos = userInfo?.role === 'TECH_LEAD' || userInfo?.role === 'ADMIN';
+  const canGiveKudos = userInfo?.role === 'TECH_LEAD';
 
   const fetchKudos = async (teamId?: number, isLoadMore: boolean = false) => {
     try {

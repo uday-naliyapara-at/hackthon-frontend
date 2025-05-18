@@ -55,15 +55,15 @@ const KUDOS_THEMES: KudosThemeMap = {
     icon: HiStar,
     borderColor: 'border-yellow-200'
   },
-  'Great Teamwork': {
-    bgColor: 'bg-gradient-to-br from-green-50 to-emerald-50',
-    hoverBg: 'bg-gradient-green',
-    iconColor: 'text-green-500',
-    textColor: 'text-emerald-700',
-    icon: HiFire,
-    borderColor: 'border-green-200'
+  'Teamwork': {
+    bgColor: 'bg-gradient-to-br from-purple-50 to-pink-50',
+    hoverBg: 'bg-gradient-purple',
+    iconColor: 'text-purple-500',
+    textColor: 'text-pink-700',
+    icon: HiUserGroup,
+    borderColor: 'border-purple-200'
   },
-  'Brilliant Idea': {
+  'Innovation': {
     bgColor: 'bg-gradient-to-br from-blue-50 to-cyan-50',
     hoverBg: 'bg-gradient-blue',
     iconColor: 'text-blue-500',
