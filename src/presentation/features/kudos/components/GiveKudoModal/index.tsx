@@ -98,6 +98,9 @@ export const GiveKudoModal: React.FC<GiveKudoModalProps> = ({ isOpen, onClose })
 
         try {
             const token = localStorage.getItem('accessToken');
+            const currentUser = localStorage.getItem('auth_user');
+            const currentUserId = currentUser ? JSON.parse(currentUser).id : null;
+
             const response = await fetch(
                 `${BACKEND_URL}/api/public/auth/users/search?searchText=${encodeURIComponent(inputValue)}`,
                 {
@@ -115,7 +118,10 @@ export const GiveKudoModal: React.FC<GiveKudoModalProps> = ({ isOpen, onClose })
                 return [];
             }
 
-            return result.data.users.map(user => ({
+            // Filter out the current user from the results
+            const filteredUsers = result.data.users.filter(user => user.id !== currentUserId);
+
+            return filteredUsers.map(user => ({
                 value: user.id,
                 label: `${user.firstName} ${user.lastName}`
             }));

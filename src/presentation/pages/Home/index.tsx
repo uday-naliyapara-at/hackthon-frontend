@@ -171,17 +171,6 @@ export const HomePage: React.FC = () => {
     }
   }, [hasMore, isLoadingMore, isSearching, page, debouncedSearchQuery, selectedTeamId]);
 
-  // Sort kudos client-side when in search mode
-  const sortedKudos = useMemo(() => {
-    const sorted = [...kudos];
-    sorted.sort((a, b) => {
-      const dateA = new Date(a.createdAt).getTime();
-      const dateB = new Date(b.createdAt).getTime();
-      return sortOrder === 'recent' ? dateB - dateA : dateA - dateB;
-    });
-    return sorted;
-  }, [kudos, sortOrder]);
-
   const handleSearch = useCallback((query: string) => {
     setSearchQuery(query);
   }, []);
@@ -228,14 +217,14 @@ export const HomePage: React.FC = () => {
                 className={styles['masonry-grid']}
                 columnClassName={styles['masonry-grid-column']}
               >
-                {sortedKudos.map((kudo) => (
+                {kudos.map((kudo) => (
                   <div key={kudo.id} className={styles['masonry-grid-item']}>
                     <KudoCard kudos={kudo} />
                   </div>
                 ))}
               </Masonry>
 
-              {sortedKudos.length === 0 ? (
+              {kudos.length === 0 ? (
                 <div className="text-center text-gray-500 py-8">
                   No kudos found matching your filters.
                 </div>

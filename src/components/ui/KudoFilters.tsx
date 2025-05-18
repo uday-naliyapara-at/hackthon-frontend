@@ -57,7 +57,7 @@ export const KudoFilters: React.FC<KudoFiltersProps> = ({
               <DropdownMenuItem
                 onClick={() => {
                   setSelectedSort('recent');
-                  onSort('recent');
+                  onSort('oldest');
                 }}
                 className="py-2.5 px-3 hover:bg-gray-50 focus:bg-gray-50 cursor-pointer"
               >
@@ -66,7 +66,7 @@ export const KudoFilters: React.FC<KudoFiltersProps> = ({
               <DropdownMenuItem
                 onClick={() => {
                   setSelectedSort('oldest');
-                  onSort('oldest');
+                  onSort('recent');
                 }}
                 className="py-2.5 px-3 hover:bg-gray-50 focus:bg-gray-50 cursor-pointer"
               >

@@ -20,7 +20,7 @@ export const SignupPage = () => {
   const handleSignupSuccess = (email: string) => {
     toast({
       title: 'Account Created',
-      description: 'Please check your email to verify your account.',
+      description: 'Signup success, please login to continue.',
       variant: 'default',
     });
     // After successful signup, redirect to login page

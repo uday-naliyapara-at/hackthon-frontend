@@ -653,7 +653,7 @@ export function UserManagementPage() {
                       <td className="px-6 py-4 whitespace-nowrap">
                         <button
                           onClick={() => handleRoleToggle(user.id, user.role, user.teamId)}
-                          disabled={user.role === 'ADMIN'}
+                          disabled={true}
                           className={`px-3 py-1 rounded-full text-xs font-semibold ${user.role === 'ADMIN'
                             ? 'bg-purple-100 text-purple-800 cursor-not-allowed'
                             : user.role === 'TECH_LEAD'
