@@ -4,25 +4,29 @@ import {
   UserActivationError,
   UserDeactivationError,
   UserNotFoundError,
-} from '@/application/features/user-management/errors';
+} from "@/application/features/user-management/errors";
 import {
   IUserManagementRepository,
   IUserManagementService,
   UserPaginationResponse,
   UserQueryParams,
-} from '@/domain/interfaces/user';
-import { User } from '@/domain/models/user/types';
-import { IHttpClient } from '@/infrastructure/utils/http/types';
+} from "@/domain/interfaces/user";
+import { User } from "@/domain/models/user/types";
+import { IHttpClient } from "@/infrastructure/utils/http/types";
 
-import { BaseErrorResponse, BaseRepository, HttpStatusCode } from '../BaseRepository';
+import {
+  BaseErrorResponse,
+  BaseRepository,
+  HttpStatusCode,
+} from "../BaseRepository";
 
 // User Management specific error codes
 export enum UserManagementErrorCode {
-  USER_NOT_FOUND = 'USER_MGMT_001',
-  INVALID_STATUS = 'USER_MGMT_002',
-  ACTIVATION_FAILED = 'USER_MGMT_003',
-  DEACTIVATION_FAILED = 'USER_MGMT_004',
-  ADMIN_REQUIRED = 'USER_MGMT_005',
+  USER_NOT_FOUND = "USER_MGMT_001",
+  INVALID_STATUS = "USER_MGMT_002",
+  ACTIVATION_FAILED = "USER_MGMT_003",
+  DEACTIVATION_FAILED = "USER_MGMT_004",
+  ADMIN_REQUIRED = "USER_MGMT_005",
 }
 
 /**
@@ -34,8 +38,8 @@ export class UserManagementRepository
   extends BaseRepository
   implements IUserManagementRepository, IUserManagementService
 {
-  private readonly baseUrl = '/users';
-  private readonly authBaseUrl = '/auth/users';
+  private readonly baseUrl = "/users";
+  private readonly authBaseUrl = "/auth/users";
 
   constructor(httpClient: IHttpClient) {
     super(httpClient);
@@ -48,7 +52,10 @@ export class UserManagementRepository
    */
   async getAllUsers(): Promise<User[]> {
     try {
-      const response = await this.httpClient.get<{ success: boolean; data: { users: User[] } }>(this.baseUrl);
+      const response = await this.httpClient.get<{
+        success: boolean;
+        data: { users: User[] };
+      }>(this.baseUrl);
       return response.data.users;
     } catch (error) {
       throw this.handleError(error);
@@ -61,18 +68,26 @@ export class UserManagementRepository
    * @param params Additional query parameters
    * @returns Paginated array of users with pagination metadata
    */
-  private async searchUsers(searchText: string, params?: Omit<UserQueryParams, 'searchText'>): Promise<UserPaginationResponse> {
+  private async searchUsers(
+    searchText: string,
+    params?: Omit<UserQueryParams, "searchText">
+  ): Promise<UserPaginationResponse> {
     try {
-      const url = `${this.authBaseUrl}/search?searchText=${encodeURIComponent(searchText)}`;
-      const response = await this.httpClient.get<{ success: boolean; data: { users: User[]; total: number } }>(url);
+      const url = `${this.authBaseUrl}/search?searchText=${encodeURIComponent(
+        searchText
+      )}`;
+      const response = await this.httpClient.get<{
+        success: boolean;
+        data: { users: User[]; total: number };
+      }>(url);
       return {
         users: response.data.users,
         pagination: {
           page: params?.page || 1,
           limit: params?.limit || 10,
           totalItems: response.data.total,
-          totalPages: Math.ceil(response.data.total / (params?.limit || 10))
-        }
+          totalPages: Math.ceil(response.data.total / (params?.limit || 10)),
+        },
       };
     } catch (error) {
       throw this.handleError(error);
@@ -85,7 +100,9 @@ export class UserManagementRepository
    * @param params Query parameters for pagination, filtering and sorting
    * @returns Paginated array of users with pagination metadata
    */
-  async getUsersWithParams(params?: UserQueryParams): Promise<UserPaginationResponse> {
+  async getUsersWithParams(
+    params?: UserQueryParams
+  ): Promise<UserPaginationResponse> {
     try {
       // If searchText is present, use the search endpoint
       if (params?.searchText) {
@@ -95,24 +112,27 @@ export class UserManagementRepository
 
       // Build query parameters for regular listing
       const queryParams = new URLSearchParams();
-      if (params?.page) queryParams.append('page', params.page.toString());
-      if (params?.limit) queryParams.append('limit', params.limit.toString());
-      if (params?.status) queryParams.append('status', params.status);
-      if (params?.sortBy) queryParams.append('sortBy', params.sortBy);
-      if (params?.sortOrder) queryParams.append('sortOrder', params.sortOrder);
+      if (params?.page) queryParams.append("page", params.page.toString());
+      if (params?.limit) queryParams.append("limit", params.limit.toString());
+      if (params?.status) queryParams.append("status", params.status);
+      if (params?.sortBy) queryParams.append("sortBy", params.sortBy);
+      if (params?.sortOrder) queryParams.append("sortOrder", params.sortOrder);
 
       const queryString = queryParams.toString();
       const url = queryString ? `${this.baseUrl}?${queryString}` : this.baseUrl;
 
-      const response = await this.httpClient.get<{ success: boolean; data: { users: User[]; total: number } }>(url);
+      const response = await this.httpClient.get<{
+        success: boolean;
+        data: { users: User[]; total: number };
+      }>(url);
       return {
         users: response.data.users,
         pagination: {
           page: params?.page || 1,
           limit: params?.limit || 10,
           totalItems: response.data.total,
-          totalPages: Math.ceil(response.data.total / (params?.limit || 10))
-        }
+          totalPages: Math.ceil(response.data.total / (params?.limit || 10)),
+        },
       };
     } catch (error) {
       throw this.handleError(error);
@@ -127,7 +147,10 @@ export class UserManagementRepository
   async activateUser(userId: string): Promise<User> {
     try {
       // Use PATCH as defined in the API schema
-      const response = await this.httpClient.patch<User>(`${this.baseUrl}/${userId}/activate`, {});
+      const response = await this.httpClient.patch<User>(
+        `${this.baseUrl}/${userId}/activate`,
+        {}
+      );
       return response;
     } catch (error) {
       throw this.handleError(error);
@@ -158,46 +181,37 @@ export class UserManagementRepository
    * @param role New role to assign
    * @returns Updated user entity
    */
-  async updateUserRole(userId: number, role: 'USER' | 'TEAM_MEMBER'): Promise<User> {
+  async updateUserRole(
+    userId: number,
+    role: "TECH_LEAD" | "TEAM_MEMBER"
+  ): Promise<User> {
     try {
-      const response = await this.httpClient.post<User>(`${this.baseUrl}/updateRole`, {
-        userId,
-        role
-      });
+      const response = await this.httpClient.put<User>(
+        `${this.baseUrl}/updateRole`,
+        {
+          userId,
+          role,
+        }
+      );
       return response;
     } catch (error) {
       throw this.handleError(error);
     }
   }
 
-  /**
-   * Update user's team role
-   * @param teamId ID of the team
-   * @param role New role to assign
-   * @returns Updated user entity
-   */
-  async updateTeamRole(userId: number, role: 'TEAM_MEMBER' | 'TECH_LEAD'): Promise<User> {
-    try {
-      const response = await this.httpClient.patch<User>(`${this.baseUrl}/updateRole`, { role, userId });
-      return response;
-    } catch (error) {
-      throw this.handleError(error);
-    }
-  }
-
-  /**
-   * Maps API error codes to domain-specific errors
-   */
-  protected override handleErrorCode(code: string, message: string): Error | null {
+  protected override handleErrorCode(
+    code: string,
+    message: string
+  ): Error | null {
     switch (code) {
       case UserManagementErrorCode.USER_NOT_FOUND:
         return new UserNotFoundError(message);
       case UserManagementErrorCode.INVALID_STATUS:
-        return new InvalidUserStatusError(message, 'unknown', 'Pending');
+        return new InvalidUserStatusError(message, "unknown", "Pending");
       case UserManagementErrorCode.ACTIVATION_FAILED:
-        return new UserActivationError('unknown', message);
+        return new UserActivationError("unknown", message);
       case UserManagementErrorCode.DEACTIVATION_FAILED:
-        return new UserDeactivationError('unknown', message);
+        return new UserDeactivationError("unknown", message);
       case UserManagementErrorCode.ADMIN_REQUIRED:
         return new AdminPrivilegeError();
       default:
@@ -223,8 +237,8 @@ export class UserManagementRepository
         return new AdminPrivilegeError();
       case HttpStatusCode.BAD_REQUEST:
         // For invalid status errors that were previously 422
-        if (errorData.message?.includes('status')) {
-          return new InvalidUserStatusError('unknown', 'unknown', 'Pending');
+        if (errorData.message?.includes("status")) {
+          return new InvalidUserStatusError("unknown", "unknown", "Pending");
         }
       // Fall through to default for other 400 errors
       default:

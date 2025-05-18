@@ -33,7 +33,10 @@ export interface IUserManagementService {
    * @throws AdminPrivilegeError when user is not an admin
    * @throws UserNotFoundError when user is not found
    */
-  updateUserRole(userId: number, role: 'USER' | 'TEAM_MEMBER'): Promise<User>;
+  updateUserRole(
+    userId: number,
+    role: "TECH_LEAD" | "TEAM_MEMBER"
+  ): Promise<User>;
 
   /**
    * Activate a pending user
@@ -66,5 +69,4 @@ export interface IUserManagementService {
    * @throws AdminPrivilegeError when user is not an admin
    * @throws UserNotFoundError when user is not found
    */
-  updateTeamRole(teamId: number, role: 'TEAM_MEMBER' | 'TECH_LEAD'): Promise<User>;
-}
+      }

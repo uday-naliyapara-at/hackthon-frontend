@@ -1,18 +1,18 @@
-import { useState, useEffect, useCallback } from 'react';
-import { HiChevronLeft, HiChevronRight } from 'react-icons/hi2';
-import debounce from 'lodash/debounce';
-import { Button } from '@/presentation/shared/atoms/Button';
-import { Input } from '@/presentation/shared/atoms/Input';
-import { LoadingSpinner } from '@/presentation/shared/atoms/LoadingSpinner';
-import { useUserManagement } from '@/presentation/features/admin/hooks/useUserManagement';
-import { useTeams } from '@/presentation/hooks/useTeams';
-import { useTeamContext } from '@/presentation/features/team/context/TeamContext';
-import { UserRole } from '@/domain/models/user/types';
+import { useState, useEffect, useCallback } from "react";
+import { HiChevronLeft, HiChevronRight } from "react-icons/hi2";
+import debounce from "lodash/debounce";
+import { Button } from "@/presentation/shared/atoms/Button";
+import { Input } from "@/presentation/shared/atoms/Input";
+import { LoadingSpinner } from "@/presentation/shared/atoms/LoadingSpinner";
+import { useUserManagement } from "@/presentation/features/admin/hooks/useUserManagement";
+import { useTeams } from "@/presentation/hooks/useTeams";
+import { useTeamContext } from "@/presentation/features/team/context/TeamContext";
+import { UserRole } from "@/domain/models/user/types";
 
 export function UserManagementPage() {
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const { users, pagination, isLoading, updateUserRole, updateTeamRole } = useUserManagement({
+  const { users, pagination, isLoading, updateUserRole } = useUserManagement({
     page: currentPage,
     limit: 10,
     searchText: searchQuery,
@@ -26,20 +26,14 @@ export function UserManagementPage() {
   }, [searchQuery]);
 
   // Create a map of team IDs to team names
-  const teamMap = new Map(teams?.map(team => [team.id, team.name]) || []);
+  const teamMap = new Map(teams?.map((team) => [team.id, team.name]) || []);
 
-  const handleRoleToggle = (userId: number, currentRole: UserRole, teamId: number | null) => {
-    if (currentRole === 'ADMIN') return; // Don't toggle admin roles
+  const handleRoleToggle = (userId: number, currentRole: UserRole) => {
+    if (currentRole === "ADMIN") return; // Don't toggle admin roles
 
-    if (currentRole === 'TEAM_MEMBER' || currentRole === 'TECH_LEAD') {
-      // Toggle between TEAM_MEMBER and TECH_LEAD
-      if (teamId) {
-        const newRole = currentRole === 'TEAM_MEMBER' ? 'TECH_LEAD' : 'TEAM_MEMBER';
-        updateTeamRole({ teamId, role: newRole });
-      }
-    } else {
-      // Toggle between USER and TEAM_MEMBER
-      const newRole = currentRole === 'USER' ? 'TEAM_MEMBER' : 'USER';
+    if (currentRole === "TEAM_MEMBER" || currentRole === "TECH_LEAD") {
+      const newRole =
+        currentRole === "TEAM_MEMBER" ? "TECH_LEAD" : "TEAM_MEMBER";
       updateUserRole({ userId, role: newRole });
     }
   };
@@ -115,7 +109,9 @@ export function UserManagementPage() {
                         />
                       </div>
                       <div className="ml-4">
-                        <div className="text-sm font-medium text-gray-900">{user.fullName}</div>
+                        <div className="text-sm font-medium text-gray-900">
+                          {user.fullName}
+                        </div>
                       </div>
                     </div>
                   </td>
@@ -124,23 +120,30 @@ export function UserManagementPage() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm text-gray-900">
-                      {user.teamId ? teamMap.get(user.teamId) || 'Unknown Team' : '-'}
+                      {user.teamId
+                        ? teamMap.get(user.teamId) || "Unknown Team"
+                        : "-"}
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <button
-                      onClick={() => handleRoleToggle(user.id, user.role, user.teamId)}
-                      disabled={user.role === 'ADMIN'}
-                      className={`px-3 py-1 rounded-full text-xs font-semibold ${user.role === 'ADMIN'
-                        ? 'bg-purple-100 text-purple-800 cursor-not-allowed'
-                        : user.role === 'TECH_LEAD'
-                          ? 'bg-blue-100 text-blue-800 hover:bg-blue-200'
-                          : user.role === 'TEAM_MEMBER'
-                            ? 'bg-green-100 text-green-800 hover:bg-green-200'
-                            : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
-                        }`}
+                      onClick={() => handleRoleToggle(user.id, user.role)}
+                      disabled={user.role === "ADMIN"}
+                      className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                        user.role === "ADMIN"
+                          ? "bg-purple-100 text-purple-800 cursor-not-allowed"
+                          : user.role === "TECH_LEAD"
+                          ? "bg-blue-100 text-blue-800 hover:bg-blue-200"
+                          : user.role === "TEAM_MEMBER"
+                          ? "bg-green-100 text-green-800 hover:bg-green-200"
+                          : "bg-gray-100 text-gray-800 hover:bg-gray-200"
+                      }`}
                     >
-                      {user.role === 'ADMIN' ? 'Admin' : user.role === 'TECH_LEAD' ? 'Tech Lead' : 'Team Member'}
+                      {user.role === "ADMIN"
+                        ? "Admin"
+                        : user.role === "TECH_LEAD"
+                        ? "Tech Lead"
+                        : "Team Member"}
                     </button>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
@@ -185,4 +188,4 @@ export function UserManagementPage() {
       )}
     </div>
   );
-} 
+}

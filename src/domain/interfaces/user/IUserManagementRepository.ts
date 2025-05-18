@@ -1,4 +1,4 @@
-import { User } from '@/domain/models/user/types';
+import { User } from "@/domain/models/user/types";
 
 /**
  * Pagination response structure for user listings
@@ -19,9 +19,9 @@ export interface UserPaginationResponse {
 export interface UserQueryParams {
   page?: number;
   limit?: number;
-  status?: 'Pending' | 'Active' | 'Deactive';
-  sortBy?: 'createdAt' | 'firstName' | 'lastName' | 'email' | 'status';
-  sortOrder?: 'asc' | 'desc';
+  status?: "Pending" | "Active" | "Deactive";
+  sortBy?: "createdAt" | "firstName" | "lastName" | "email" | "status";
+  sortOrder?: "asc" | "desc";
   searchText?: string;
 }
 
@@ -54,7 +54,10 @@ export interface IUserManagementRepository {
    * @throws {ForbiddenError} When user does not have admin privileges
    * @throws {NotFoundError} When user is not found
    */
-  updateUserRole(userId: number, role: 'USER' | 'TEAM_MEMBER'): Promise<User>;
+  updateUserRole(
+    userId: number,
+    role: "TECH_LEAD" | "TEAM_MEMBER"
+  ): Promise<User>;
 
   /**
    * Activate a pending user
@@ -75,15 +78,4 @@ export interface IUserManagementRepository {
    * @throws {ValidationError} When user status is not active
    */
   deactivateUser(userId: string): Promise<User>;
-
-  /**
-   * Update user's team role
-   * @param teamId ID of the team
-   * @param role New role to assign
-   * @returns Updated user entity
-   * @throws {UnauthorizedError} When authentication is invalid
-   * @throws {ForbiddenError} When user does not have admin privileges
-   * @throws {NotFoundError} When user is not found
-   */
-  updateTeamRole(teamId: number, role: 'TEAM_MEMBER' | 'TECH_LEAD'): Promise<User>;
 }

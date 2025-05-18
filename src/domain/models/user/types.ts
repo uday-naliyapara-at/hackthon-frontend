@@ -21,7 +21,7 @@ export interface User {
   /** URL to the user's avatar image */
   avatarUrl?: string;
   /** User's status in the system */
-  status?: 'Pending' | 'Active' | 'Deactive';
+  status?: "Pending" | "Active" | "Deactive";
   /** Date when user registered (for pending users) */
   registrationDate?: string;
   /** ID or name of the admin who changed the status */
@@ -90,8 +90,8 @@ export interface ResetPasswordDTO {
 }
 
 // User role and status types
-export const USER_ROLES = ['ADMIN', 'USER', 'TEAM_MEMBER', 'TECH_LEAD'] as const;
+export const USER_ROLES = ["ADMIN", "TEAM_MEMBER", "TECH_LEAD"] as const;
 export type UserRole = (typeof USER_ROLES)[number];
 
-export const USER_STATUSES = ['Pending', 'Active', 'Deactive'] as const;
+export const USER_STATUSES = ["Pending", "Active", "Deactive"] as const;
 export type UserStatus = (typeof USER_STATUSES)[number];

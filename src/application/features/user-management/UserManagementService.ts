@@ -1,12 +1,19 @@
-import { IUserManagementRepository, IUserManagementService, UserPaginationResponse, UserQueryParams } from '@/domain/interfaces/user';
-import { User } from '@/domain/models/user/types';
+import {
+  IUserManagementRepository,
+  IUserManagementService,
+  UserPaginationResponse,
+  UserQueryParams,
+} from "@/domain/interfaces/user";
+import { User } from "@/domain/models/user/types";
 
 /**
  * Service class for handling user management business logic
  * Coordinates between domain and infrastructure layers
  */
 export class UserManagementService implements IUserManagementService {
-  constructor(private readonly userManagementRepository: IUserManagementRepository) {}
+  constructor(
+    private readonly userManagementRepository: IUserManagementRepository
+  ) {}
 
   /**
    * Get all users in the system
@@ -22,7 +29,9 @@ export class UserManagementService implements IUserManagementService {
    * @param params Query parameters for pagination and filtering
    * @returns Paginated array of users
    */
-  async getUsersWithParams(params?: UserQueryParams): Promise<UserPaginationResponse> {
+  async getUsersWithParams(
+    params?: UserQueryParams
+  ): Promise<UserPaginationResponse> {
     return this.userManagementRepository.getUsersWithParams(params);
   }
 
@@ -32,7 +41,10 @@ export class UserManagementService implements IUserManagementService {
    * @param role New role to assign
    * @returns Updated user entity
    */
-  async updateUserRole(userId: number, role: 'USER' | 'TEAM_MEMBER'): Promise<User> {
+  async updateUserRole(
+    userId: number,
+    role: "TECH_LEAD" | "TEAM_MEMBER"
+  ): Promise<User> {
     return this.userManagementRepository.updateUserRole(userId, role);
   }
 
@@ -53,14 +65,4 @@ export class UserManagementService implements IUserManagementService {
   async deactivateUser(userId: string): Promise<User> {
     return this.userManagementRepository.deactivateUser(userId);
   }
-
-  /**
-   * Update user's team role
-   * @param teamId ID of the team
-   * @param role New role to assign
-   * @returns Updated user entity
-   */
-  async updateTeamRole(teamId: number, role: 'TEAM_MEMBER' | 'TECH_LEAD'): Promise<User> {
-    return this.userManagementRepository.updateTeamRole(teamId, role);
-  }
-} 
+}
