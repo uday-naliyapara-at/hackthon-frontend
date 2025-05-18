@@ -24,7 +24,6 @@ export const verifyEmailHandler = http.post<never, SuccessResponse>(
       }
 
       const { token } = result.data;
-      console.log('token', token);
 
       // Get verification token
       const verificationToken = await authStore.getVerificationToken(token);
