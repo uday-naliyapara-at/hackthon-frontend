@@ -10,9 +10,10 @@ import { useDebounce } from '@/presentation/hooks/useDebounce';
 import styles from './Home.module.css';
 import { Button } from '@/components/ui/button';
 import { HiArrowLongRight, HiArrowLongDown } from 'react-icons/hi2';
-import { Icon } from '@/presentation/shared/atoms';
+import { Icon } from '@/presentation/shared/atoms/Icon';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
+import { GiveKudoModal } from '@/presentation/features/kudos/components/GiveKudoModal';
 
 // Define breakpoints for responsive masonry layout
 const breakpointColumns = {
@@ -24,6 +25,15 @@ const breakpointColumns = {
   640: 1,        // sm screens
 };
 
+interface UserInfo {
+  id: number;
+  firstName: string;
+  lastName: string;
+  email: string;
+  role: string;
+  teamId: number;
+}
+
 export const HomePage: React.FC = () => {
   const [kudos, setKudos] = useState<Kudos[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -34,6 +44,9 @@ export const HomePage: React.FC = () => {
   const [page, setPage] = useState(1);
   const PAGE_SIZE = 9;
 
+  // Modal state
+  const [isGiveKudoModalOpen, setIsGiveKudoModalOpen] = useState(false);
+
   // Filter states
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTeamId, setSelectedTeamId] = useState(0);
@@ -41,6 +54,25 @@ export const HomePage: React.FC = () => {
 
   // Debounce search query
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
+
+  // Get user info from localStorage
+  const getUserInfo = (): UserInfo | null => {
+    const userInfoStr = localStorage.getItem('auth_user');
+    console.log('User Info String:', userInfoStr);
+    if (!userInfoStr) return null;
+    try {
+      const parsed = JSON.parse(userInfoStr);
+      console.log('Parsed User Info:', parsed);
+      return parsed;
+    } catch (e) {
+      console.error('Error parsing user info:', e);
+      return null;
+    }
+  };
+
+  const userInfo = getUserInfo();
+  console.log('Current User Role:', userInfo?.role);
+  const canGiveKudos = userInfo?.role === 'TECH_LEAD' || userInfo?.role === 'ADMIN';
 
   const fetchKudos = async (teamId?: number, isLoadMore: boolean = false) => {
     try {
@@ -161,13 +193,16 @@ export const HomePage: React.FC = () => {
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="flex justify-end justify-between items-center">
-        <Button
-          size="lg"
-          className="bg-white text-purple-600 hover:bg-purple-50 hover:text-purple-700 transition-all duration-200 group"
-        >
-          <span>Give Kudos</span>
-          <Icon icon={HiArrowLongRight} className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
-        </Button>
+        {canGiveKudos && (
+          <Button
+            size="lg"
+            className="bg-white text-purple-600 hover:bg-purple-50 hover:text-purple-700 transition-all duration-200 group"
+            onClick={() => setIsGiveKudoModalOpen(true)}
+          >
+            <span>Give Kudos</span>
+            <Icon icon={HiArrowLongRight} className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
+          </Button>
+        )}
         <KudoFilters
           onSearch={handleSearch}
           onTeamFilter={handleTeamFilter}
@@ -262,6 +297,13 @@ export const HomePage: React.FC = () => {
             </>
           )}
         </div>
+      )}
+
+      {canGiveKudos && (
+        <GiveKudoModal
+          isOpen={isGiveKudoModalOpen}
+          onClose={() => setIsGiveKudoModalOpen(false)}
+        />
       )}
     </div>
   );

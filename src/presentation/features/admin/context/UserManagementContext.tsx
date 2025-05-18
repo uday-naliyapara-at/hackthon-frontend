@@ -10,11 +10,12 @@ interface UserManagementContextType {
 
 interface UserManagementProviderProps {
   children: ReactNode;
+  userManagementService: UserManagementService;
 }
 
 const UserManagementContext = createContext<UserManagementContextType | null>(null);
 
-export const UserManagementProvider = ({ children }: UserManagementProviderProps) => {
+export const UserManagementProvider = ({ children, userManagementService }: UserManagementProviderProps) => {
   const { sessionService } = useAuthContext();
 
   const services = useMemo(() => {
