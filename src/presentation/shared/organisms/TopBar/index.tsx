@@ -31,15 +31,22 @@ export function TopBar({
     onLogout?.();
   };
 
+  const gradientStyle = {
+    background: 'linear-gradient(90deg, #3B82F6 0%, #8B5CF6 50%, #EC4899 100%)',
+    WebkitBackgroundClip: 'text',
+    backgroundClip: 'text',
+    color: 'transparent',
+    backgroundSize: '200% auto',
+    animation: 'gradient 3s ease infinite'
+  };
+
   return (
     <header className={cn('flex items-center justify-between h-[60px] px-[220px] border-b', className)}>
      
       <div className="flex items-center gap-2 text-2xl font-bold text-gray-900">
         <Link to="/" className="flex items-center gap-2 hover:no-underline">
           <Icon icon={HiTrophy} className="w-7 h-7 text-blue-500" />
-          <span className="text-2xl font-bold bg-gradient-to-r from-blue-500 to-blue-700 bg-clip-text text-transparent">
-            KudosWall
-          </span>
+          <span className="text-2xl font-bold" style={gradientStyle}>KudosWall</span>
         </Link>
       </div>
       <div className="flex-1" />

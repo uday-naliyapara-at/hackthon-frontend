@@ -4,6 +4,14 @@ import HeroBackground from '@/assets/Heroback.png';
 import { LoginForm } from '../organisms/LoginForm';
 
 export const LoginPage = () => {
+  const gradientStyle = {
+    background: 'linear-gradient(90deg, #FF7E5F 0%, #845EC2 50%, #FF69B4 100%)',
+    WebkitBackgroundClip: 'text',
+    backgroundClip: 'text',
+    color: 'transparent',
+    backgroundSize: '200% 200%',
+    animation: 'gradient 3s ease infinite'
+  };
 
   return (
     <div 
@@ -15,7 +23,8 @@ export const LoginPage = () => {
         backgroundRepeat: 'no-repeat'
       }}
     >
-      <div className="mb-2 flex items-center gap-2">
+      <div className="mb-2 flex items-center gap-2 mb-8">
+        <span className="text-4xl font-bold" style={gradientStyle}>KudosWall</span>
       </div>
       <Card className="mx-auto w-full max-w-[500px] overflow-hidden bg-white/95 backdrop-blur-sm shadow-xl">
         <CardContent className="grid p-0 md:grid-cols-1">

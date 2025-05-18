@@ -35,6 +35,16 @@ export const SignupPage = () => {
     });
   };
 
+  const gradientStyle = {
+    background: 'linear-gradient(90deg, #3B82F6 0%, #8B5CF6 50%, #EC4899 100%)',
+    WebkitBackgroundClip: 'text',
+    backgroundClip: 'text',
+    color: 'transparent',
+    backgroundSize: '200% auto',
+    animation: 'gradient 3s ease infinite'
+  };
+
+
   return (
     <div 
       className="flex min-h-screen flex-col items-center justify-center bg-muted/50 p-4"
@@ -45,7 +55,8 @@ export const SignupPage = () => {
         backgroundRepeat: 'no-repeat'
       }}
     >
-      <div className="mb-2 flex items-center gap-2">
+      <div className="mb-2 flex items-center gap-2 mb-8">
+      <span className="text-4xl font-bold" style={gradientStyle}>KudosWall</span>
       </div>
       <Card className="mx-auto w-full max-w-[500px] overflow-hidden bg-white/95 backdrop-blur-sm shadow-xl">
         <CardContent className="grid p-0 md:grid-cols-1">
