@@ -35,6 +35,7 @@ export class UserManagementRepository
   implements IUserManagementRepository, IUserManagementService
 {
   private readonly baseUrl = '/users';
+  private readonly authBaseUrl = '/auth/users';
 
   constructor(httpClient: IHttpClient) {
     super(httpClient);
@@ -55,6 +56,30 @@ export class UserManagementRepository
   }
 
   /**
+   * Search users by query text
+   * @param searchText The search query
+   * @param params Additional query parameters
+   * @returns Paginated array of users with pagination metadata
+   */
+  private async searchUsers(searchText: string, params?: Omit<UserQueryParams, 'searchText'>): Promise<UserPaginationResponse> {
+    try {
+      const url = `${this.authBaseUrl}/search?searchText=${encodeURIComponent(searchText)}`;
+      const response = await this.httpClient.get<{ success: boolean; data: { users: User[]; total: number } }>(url);
+      return {
+        users: response.data.users,
+        pagination: {
+          page: params?.page || 1,
+          limit: params?.limit || 10,
+          totalItems: response.data.total,
+          totalPages: Math.ceil(response.data.total / (params?.limit || 10))
+        }
+      };
+    } catch (error) {
+      throw this.handleError(error);
+    }
+  }
+
+  /**
    * Get users in the system with pagination, filtering and sorting
    * Extended functionality for UI components that need pagination
    * @param params Query parameters for pagination, filtering and sorting
@@ -62,7 +87,13 @@ export class UserManagementRepository
    */
   async getUsersWithParams(params?: UserQueryParams): Promise<UserPaginationResponse> {
     try {
-      // Build query parameters
+      // If searchText is present, use the search endpoint
+      if (params?.searchText) {
+        const { searchText, ...otherParams } = params;
+        return this.searchUsers(searchText, otherParams);
+      }
+
+      // Build query parameters for regular listing
       const queryParams = new URLSearchParams();
       if (params?.page) queryParams.append('page', params.page.toString());
       if (params?.limit) queryParams.append('limit', params.limit.toString());

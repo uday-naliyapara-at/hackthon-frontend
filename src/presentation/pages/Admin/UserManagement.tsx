@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
-import { HiMagnifyingGlass, HiChevronLeft, HiChevronRight } from 'react-icons/hi2';
+import { HiChevronLeft, HiChevronRight } from 'react-icons/hi2';
 import debounce from 'lodash/debounce';
-
 import { Button } from '@/presentation/shared/atoms/Button';
 import { Input } from '@/presentation/shared/atoms/Input';
 import { LoadingSpinner } from '@/presentation/shared/atoms/LoadingSpinner';

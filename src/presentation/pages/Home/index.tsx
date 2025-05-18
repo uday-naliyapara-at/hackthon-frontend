@@ -9,8 +9,10 @@ import { Kudos } from '@/domain/models/kudos/types';
 import { useDebounce } from '@/presentation/hooks/useDebounce';
 import styles from './Home.module.css';
 import { Button } from '@/components/ui/button';
-import { HiArrowLongRight } from 'react-icons/hi2';
+import { HiArrowLongRight, HiArrowLongDown } from 'react-icons/hi2';
 import { Icon } from '@/presentation/shared/atoms';
+import { motion } from 'framer-motion';
+import { cn } from '@/lib/utils';
 
 // Define breakpoints for responsive masonry layout
 const breakpointColumns = {
@@ -204,16 +206,57 @@ export const HomePage: React.FC = () => {
                 </div>
               ) : hasMore && (
                 <div className="flex justify-center mt-8">
-                  <Button
-                    variant="default"
-                    size="lg"
-                    onClick={handleLoadMore}
-                    disabled={isLoadingMore || isSearching}
-                    className="w-full max-w-xs flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white"
+                  <motion.div
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="w-full max-w-xs"
                   >
-                    {(isLoadingMore) && <LoadingSpinner size="sm" className="text-white" />}
-                    {isLoadingMore ? 'Loading more kudos...' : 'Load More'}
-                  </Button>
+                    <Button
+                      variant="default"
+                      size="lg"
+                      onClick={handleLoadMore}
+                      disabled={isLoadingMore || isSearching}
+                      className={cn(
+                        "w-full relative overflow-hidden group",
+                        "bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500",
+                        "hover:from-blue-600 hover:via-indigo-600 hover:to-purple-600",
+                        "text-white font-semibold tracking-wide",
+                        "shadow-lg hover:shadow-xl",
+                        "transition-all duration-300 ease-out",
+                        "border-none outline-none",
+                        "py-6 rounded-xl"
+                      )}
+                    >
+                      <div className="relative flex items-center justify-center gap-3">
+                        {isLoadingMore ? (
+                          <>
+                            <LoadingSpinner size="sm" className="text-white/90 animate-spin" />
+                            <span className="animate-pulse">Loading more kudos...</span>
+                          </>
+                        ) : (
+                          <>
+                            <span>Load More Kudos</span>
+                            <motion.div
+                              animate={{
+                                y: [0, -4, 0],
+                              }}
+                              transition={{
+                                duration: 1.5,
+                                repeat: Infinity,
+                                ease: "easeInOut"
+                              }}
+                            >
+                              <Icon
+                                icon={HiArrowLongDown}
+                                className="w-5 h-5 transition-transform group-hover:scale-110"
+                              />
+                            </motion.div>
+                          </>
+                        )}
+                      </div>
+                      <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 opacity-0 group-hover:opacity-100 transform translate-x-[-100%] group-hover:translate-x-[100%] transition-all duration-1000" />
+                    </Button>
+                  </motion.div>
                 </div>
               )}
             </>
