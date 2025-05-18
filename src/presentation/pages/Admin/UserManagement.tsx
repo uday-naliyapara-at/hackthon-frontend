@@ -156,6 +156,86 @@ export function UserManagementPage() {
     }
   });
 
+  // Delete user mutation
+  const deleteUserMutation = useMutation({
+    mutationFn: async (userId: number) => {
+      // Implementing a custom fetch since our httpClient doesn't support DELETE with a body
+      const accessToken = localStorage.getItem('accessToken');
+      const baseUrl = import.meta.env.VITE_API_BASE_URL || '';
+      
+      // Create URLSearchParams for form-urlencoded body
+      const formData = new URLSearchParams();
+      formData.append('userId', userId.toString());
+      
+      const response = await fetch(`${baseUrl}/users/`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          ...(accessToken ? { 'Authorization': accessToken } : {})
+        },
+        body: formData,
+        credentials: 'include'
+      });
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText);
+      }
+      
+      // Return empty response or parse the response if needed
+      const text = await response.text();
+      return text ? JSON.parse(text) : undefined;
+    },
+    onMutate: async (userId) => {
+      // Cancel any outgoing refetches so they don't overwrite our optimistic update
+      await queryClient.cancelQueries({ queryKey: USER_MANAGEMENT_QUERY_KEY });
+      
+      // Snapshot the previous users data
+      const previousUsers = queryClient.getQueryData([...USER_MANAGEMENT_QUERY_KEY, { page: currentPage, limit: 10, searchText: searchQuery }]);
+      
+      // Optimistically update the cache by removing the deleted user
+      queryClient.setQueryData([...USER_MANAGEMENT_QUERY_KEY, { page: currentPage, limit: 10, searchText: searchQuery }], (old: any) => {
+        if (!old || !old.users) return old;
+        
+        return {
+          ...old,
+          users: old.users.filter((user: any) => user.id !== userId),
+        };
+      });
+      
+      return { previousUsers };
+    },
+    onError: (error, variables, context) => {
+      // If the mutation fails, revert to the previous users state
+      if (context?.previousUsers) {
+        queryClient.setQueryData(
+          [...USER_MANAGEMENT_QUERY_KEY, { page: currentPage, limit: 10, searchText: searchQuery }],
+          context.previousUsers
+        );
+      }
+      
+      toast({
+        title: 'Delete Failed',
+        description: error?.message || 'Failed to delete user',
+        variant: 'destructive',
+      });
+    },
+    onSuccess: () => {
+      toast({
+        title: 'Success',
+        description: 'User deleted successfully',
+        variant: 'success',
+      });
+      
+      // Close the dialog
+      setIsDeleteDialogOpen(false);
+      setUserToDelete(null);
+      
+      // Invalidate the users query to ensure data is fresh
+      queryClient.invalidateQueries({ queryKey: USER_MANAGEMENT_QUERY_KEY });
+    },
+  });
+
   // Reset page when search query changes
   useEffect(() => {
     setCurrentPage(1);
@@ -215,11 +295,8 @@ export function UserManagementPage() {
   // Handler for confirming user deletion
   const handleConfirmDelete = () => {
     if (userToDelete) {
-      console.log('Deleting user:', userToDelete.id);
-      // Will implement API call here later
+      deleteUserMutation.mutate(userToDelete.id);
     }
-    setIsDeleteDialogOpen(false);
-    setUserToDelete(null);
   };
 
   // Handlers for form changes
@@ -520,6 +597,7 @@ export function UserManagementPage() {
               variant="outline"
               onClick={() => setIsDeleteDialogOpen(false)}
               className="px-6 h-10 transition-colors"
+              disabled={deleteUserMutation.isPending}
             >
               Cancel
             </Button>
@@ -527,8 +605,14 @@ export function UserManagementPage() {
               variant="destructive"
               onClick={handleConfirmDelete}
               className="px-6 h-10 transition-colors"
+              disabled={deleteUserMutation.isPending}
             >
-              Yes, delete user
+              {deleteUserMutation.isPending ? (
+                <>
+                  <LoadingSpinner size="sm" className="text-white mr-2" />
+                  Deleting...
+                </>
+              ) : 'Yes, delete user'}
             </Button>
           </DialogFooter>
         </DialogContent>
