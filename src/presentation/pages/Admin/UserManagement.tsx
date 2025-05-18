@@ -4,7 +4,7 @@ import debounce from 'lodash/debounce';
 import { Button } from '@/presentation/shared/atoms/Button';
 import { Input } from '@/presentation/shared/atoms/Input';
 import { LoadingSpinner } from '@/presentation/shared/atoms/LoadingSpinner';
-import { useUserManagement } from '@/presentation/features/admin/hooks/useUserManagement';
+import { useUserManagement, USER_MANAGEMENT_QUERY_KEY } from '@/presentation/features/admin/hooks/useUserManagement';
 import { useTeams } from '@/presentation/hooks/useTeams';
 import { useTeamContext } from '@/presentation/features/team/context/TeamContext';
 import { UserRole } from '@/domain/models/user/types';
@@ -12,6 +12,10 @@ import { Icon } from '@/presentation/shared/atoms/Icon';
 import { HiPencilSquare } from 'react-icons/hi2';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Select } from '@/components/ui/select';
+import { useToast } from '@/components/hooks/use-toast';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { createHttpClient } from '@/infrastructure/utils/http/httpClientFactory';
+import { useAuthContext } from '@/presentation/features/auth/context/AuthContext';
 
 // User interface for the component
 interface User {
@@ -50,6 +54,9 @@ export function UserManagementPage() {
   });
   const { teamService } = useTeamContext();
   const { data: teams, isLoading: isLoadingTeams } = useTeams(teamService);
+  const { toast } = useToast();
+  const { sessionService } = useAuthContext();
+  const queryClient = useQueryClient();
 
   // Edit user state
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -61,6 +68,93 @@ export function UserManagementPage() {
   // Delete confirmation state
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [userToDelete, setUserToDelete] = useState<User | null>(null);
+
+  // Create HTTP client for direct API calls
+  const createClient = useCallback(async () => {
+    return createHttpClient(async () => {
+      try {
+        return await sessionService.refreshAccessToken();
+      } catch (error) {
+        console.error('Failed to refresh token:', error);
+        throw error;
+      }
+    });
+  }, [sessionService]);
+
+  // Update user mutation
+  const updateUserMutation = useMutation({
+    mutationFn: async ({ userId, role, teamId }: { userId: number; role?: UserRole; teamId?: number | null }) => {
+      const client = await createClient();
+      const payload: any = { userId };
+      
+      // Add role or teamId as required
+      if (role) payload.role = role;
+      if (teamId !== undefined) payload.teamId = teamId;
+      
+      const response = await client.put('/users/updateRole', payload);
+      return response;
+    },
+    onMutate: async ({ userId, role, teamId }) => {
+      // Cancel any outgoing refetches so they don't overwrite our optimistic update
+      await queryClient.cancelQueries({ queryKey: USER_MANAGEMENT_QUERY_KEY });
+      
+      // Snapshot the previous users data
+      const previousUsers = queryClient.getQueryData([...USER_MANAGEMENT_QUERY_KEY, { page: currentPage, limit: 10, searchText: searchQuery }]);
+      
+      // Optimistically update the cache with the new user data
+      queryClient.setQueryData([...USER_MANAGEMENT_QUERY_KEY, { page: currentPage, limit: 10, searchText: searchQuery }], (old: any) => {
+        if (!old || !old.users) return old;
+        
+        return {
+          ...old,
+          users: old.users.map((user: any) => {
+            if (user.id === userId) {
+              return {
+                ...user,
+                ...(role && { role }),
+                ...(teamId !== undefined && { teamId }),
+              };
+            }
+            return user;
+          }),
+        };
+      });
+      
+      return { previousUsers };
+    },
+    onError: (error, variables, context) => {
+      // If the mutation fails, revert to the previous users state
+      if (context?.previousUsers) {
+        queryClient.setQueryData(
+          [...USER_MANAGEMENT_QUERY_KEY, { page: currentPage, limit: 10, searchText: searchQuery }],
+          context.previousUsers
+        );
+      }
+      
+      toast({
+        title: 'Update Failed',
+        description: error?.message || 'User not found or role update failed',
+        variant: 'destructive',
+      });
+    },
+    onSuccess: () => {
+      toast({
+        title: 'Success',
+        description: 'User updated successfully',
+        variant: 'success',
+      });
+      
+      // Invalidate the users query to ensure data is fresh
+      queryClient.invalidateQueries({ queryKey: USER_MANAGEMENT_QUERY_KEY });
+      
+      // Close the dialog
+      setIsEditDialogOpen(false);
+    },
+    onSettled: () => {
+      // Always refetch after error or success to make sure our local data is correct
+      queryClient.invalidateQueries({ queryKey: USER_MANAGEMENT_QUERY_KEY });
+    }
+  });
 
   // Reset page when search query changes
   useEffect(() => {
@@ -144,10 +238,23 @@ export function UserManagementPage() {
   // Handler for saving user changes
   const handleSaveChanges = () => {
     if (editingUser && (editedRole !== editingUser.role || editedTeamId !== editingUser.teamId)) {
-      console.log('Saving changes for user:', editingUser.id, { role: editedRole, teamId: editedTeamId });
-      // Will implement API calls here later
+      // Prepare payload - userId is required, plus either role or teamId
+      const payload: { userId: number; role?: UserRole; teamId?: number | null } = {
+        userId: editingUser.id
+      };
+      
+      // Only include changed fields
+      if (editedRole !== editingUser.role) {
+        payload.role = editedRole || undefined;
+      }
+      
+      if (editedTeamId !== editingUser.teamId) {
+        payload.teamId = editedTeamId;
+      }
+      
+      // Call update API
+      updateUserMutation.mutate(payload);
     }
-    setIsEditDialogOpen(false);
   };
 
   return (
@@ -376,16 +483,22 @@ export function UserManagementPage() {
                 setIsDeleteDialogOpen(true);
               }}
               className="px-6 h-10 transition-colors"
+              disabled={updateUserMutation.isPending}
             >
               Delete
             </Button>
             <Button 
               type="submit" 
               onClick={handleSaveChanges} 
-              disabled={!isFormChanged || !editedTeamId}
+              disabled={!isFormChanged || !editedTeamId || updateUserMutation.isPending}
               className="bg-blue-600 hover:bg-blue-700 text-white px-6 h-10 transition-colors"
             >
-              Save changes
+              {updateUserMutation.isPending ? (
+                <>
+                  <LoadingSpinner size="sm" className="text-white mr-2" />
+                  Saving...
+                </>
+              ) : 'Save changes'}
             </Button>
           </DialogFooter>
         </DialogContent>
