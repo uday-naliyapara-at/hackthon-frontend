@@ -9,13 +9,15 @@ import { useTeams } from '@/presentation/hooks/useTeams';
 import { useTeamContext } from '@/presentation/features/team/context/TeamContext';
 import { UserRole } from '@/domain/models/user/types';
 import { Icon } from '@/presentation/shared/atoms/Icon';
-import { HiPencilSquare } from 'react-icons/hi2';
+import { HiPencilSquare, HiUserGroup, HiUsers } from 'react-icons/hi2';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Select } from '@/components/ui/select';
 import { useToast } from '@/components/hooks/use-toast';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { createHttpClient } from '@/infrastructure/utils/http/httpClientFactory';
 import { useAuthContext } from '@/presentation/features/auth/context/AuthContext';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Team } from '@/domain/models/team/types';
 
 // User interface for the component
 interface User {
@@ -44,7 +46,19 @@ const getUserInitials = (fullName: string): string => {
   return names[0][0].toUpperCase();
 };
 
+// Helper function to get team initials
+const getTeamInitials = (teamName: string): string => {
+  if (!teamName) return '';
+
+  const words = teamName.split(' ');
+  if (words.length >= 2) {
+    return (words[0][0] + words[1][0]).toUpperCase();
+  }
+  return teamName[0].toUpperCase();
+};
+
 export function UserManagementPage() {
+  const [activeTab, setActiveTab] = useState('user-management');
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const { users, pagination, isLoading, updateUserRole, updateTeamRole } = useUserManagement({
@@ -65,9 +79,23 @@ export function UserManagementPage() {
   const [editedRole, setEditedRole] = useState<UserRole | null>(null);
   const [isFormChanged, setIsFormChanged] = useState(false);
 
+  // Edit team state
+  const [isEditTeamDialogOpen, setIsEditTeamDialogOpen] = useState(false);
+  const [editingTeam, setEditingTeam] = useState<Team | null>(null);
+  const [editedTeamName, setEditedTeamName] = useState<string>('');
+  const [isTeamFormChanged, setIsTeamFormChanged] = useState(false);
+
   // Delete confirmation state
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [userToDelete, setUserToDelete] = useState<User | null>(null);
+  
+  // Delete team confirmation state
+  const [isDeleteTeamDialogOpen, setIsDeleteTeamDialogOpen] = useState(false);
+  const [teamToDelete, setTeamToDelete] = useState<Team | null>(null);
+
+  // Create team state
+  const [isCreateTeamDialogOpen, setIsCreateTeamDialogOpen] = useState(false);
+  const [newTeamName, setNewTeamName] = useState('');
 
   // Create HTTP client for direct API calls
   const createClient = useCallback(async () => {
@@ -236,6 +264,156 @@ export function UserManagementPage() {
     },
   });
 
+  // Team edit mutation
+  const updateTeamMutation = useMutation({
+    mutationFn: async ({ teamId, name }: { teamId: number; name: string }) => {
+      const client = await createClient();
+      const response = await client.put(`/teams/${teamId}`, { name });
+      return response;
+    },
+    onMutate: async ({ teamId, name }) => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ['teams'] });
+      
+      // Snapshot the previous teams data
+      const previousTeams = queryClient.getQueryData(['teams']);
+      
+      // Optimistically update the cache
+      queryClient.setQueryData(['teams'], (old: any) => {
+        if (!old) return old;
+        
+        return old.map((team: Team) => {
+          if (team.id === teamId) {
+            return { ...team, name };
+          }
+          return team;
+        });
+      });
+      
+      return { previousTeams };
+    },
+    onError: (error, variables, context) => {
+      // If the mutation fails, revert to the previous teams state
+      if (context?.previousTeams) {
+        queryClient.setQueryData(['teams'], context.previousTeams);
+      }
+      
+      toast({
+        title: 'Update Failed',
+        description: error?.message || 'Team update failed',
+        variant: 'destructive',
+      });
+    },
+    onSuccess: () => {
+      toast({
+        title: 'Success',
+        description: 'Team updated successfully',
+        variant: 'success',
+      });
+      
+      // Invalidate the teams query to ensure data is fresh
+      queryClient.invalidateQueries({ queryKey: ['teams'] });
+      
+      // Close the dialog
+      setIsEditTeamDialogOpen(false);
+    }
+  });
+
+  // Delete team mutation
+  const deleteTeamMutation = useMutation({
+    mutationFn: async (teamId: number) => {
+      const client = await createClient();
+      const response = await client.delete(`/teams/${teamId}`);
+      return response;
+    },
+    onMutate: async (teamId) => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ['teams'] });
+      
+      // Snapshot the previous teams data
+      const previousTeams = queryClient.getQueryData(['teams']);
+      
+      // Optimistically update the cache by removing the deleted team
+      queryClient.setQueryData(['teams'], (old: any) => {
+        if (!old) return old;
+        
+        return old.filter((team: Team) => team.id !== teamId);
+      });
+      
+      return { previousTeams };
+    },
+    onError: (error, variables, context) => {
+      // If the mutation fails, revert to the previous teams state
+      if (context?.previousTeams) {
+        queryClient.setQueryData(['teams'], context.previousTeams);
+      }
+      
+      toast({
+        title: 'Delete Failed',
+        description: error?.message || 'Failed to delete team',
+        variant: 'destructive',
+      });
+    },
+    onSuccess: () => {
+      toast({
+        title: 'Success',
+        description: 'Team deleted successfully',
+        variant: 'success',
+      });
+      
+      // Close the dialog
+      setIsDeleteTeamDialogOpen(false);
+      setTeamToDelete(null);
+      
+      // Invalidate the teams query to ensure data is fresh
+      queryClient.invalidateQueries({ queryKey: ['teams'] });
+    }
+  });
+
+  // Create team mutation
+  const createTeamMutation = useMutation({
+    mutationFn: async (name: string) => {
+      const client = await createClient();
+      const response = await client.post('/teams', { name });
+      return response;
+    },
+    onMutate: async (name) => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ['teams'] });
+      
+      // Snapshot the previous teams data
+      const previousTeams = queryClient.getQueryData(['teams']);
+      
+      return { previousTeams };
+    },
+    onError: (error, variables, context) => {
+      // If the mutation fails, revert to the previous teams state
+      if (context?.previousTeams) {
+        queryClient.setQueryData(['teams'], context.previousTeams);
+      }
+      
+      toast({
+        title: 'Create Team Failed',
+        description: error?.message || 'Failed to create team',
+        variant: 'destructive',
+      });
+    },
+    onSuccess: () => {
+      toast({
+        title: 'Success',
+        description: 'Team created successfully',
+        variant: 'success',
+      });
+      
+      // Reset form and close dialog
+      setNewTeamName('');
+      setIsCreateTeamDialogOpen(false);
+      
+      // Invalidate the teams query to ensure data is fresh
+      queryClient.invalidateQueries({ queryKey: ['teams'] });
+    }
+  });
+
   // Reset page when search query changes
   useEffect(() => {
     setCurrentPage(1);
@@ -334,15 +512,71 @@ export function UserManagementPage() {
     }
   };
 
+  // Handler for team edit button click
+  const handleEditTeamClick = (team: Team) => {
+    setEditingTeam(team);
+    setEditedTeamName(team.name);
+    setIsTeamFormChanged(false);
+    setIsEditTeamDialogOpen(true);
+  };
+
+  // Handler for team name change
+  const handleTeamNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newName = e.target.value;
+    setEditedTeamName(newName);
+    setIsTeamFormChanged(newName !== editingTeam?.name);
+  };
+
+  // Handler for team delete button click
+  const handleDeleteTeamClick = (team: Team) => {
+    setTeamToDelete(team);
+    setIsDeleteTeamDialogOpen(true);
+  };
+
+  // Handler for confirming team deletion
+  const handleConfirmTeamDelete = () => {
+    if (teamToDelete) {
+      deleteTeamMutation.mutate(teamToDelete.id);
+    }
+  };
+
+  // Handler for saving team changes
+  const handleSaveTeamChanges = () => {
+    if (editingTeam && editedTeamName !== editingTeam.name) {
+      updateTeamMutation.mutate({
+        teamId: editingTeam.id,
+        name: editedTeamName
+      });
+    }
+  };
+
+  // Handler for opening create team dialog
+  const handleCreateTeamClick = () => {
+    setNewTeamName('');
+    setIsCreateTeamDialogOpen(true);
+  };
+
+  // Handler for new team name change
+  const handleNewTeamNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setNewTeamName(e.target.value);
+  };
+
+  // Handler for creating new team
+  const handleCreateTeam = () => {
+    if (newTeamName.trim()) {
+      createTeamMutation.mutate(newTeamName);
+    }
+  };
+
   return (
     <div className="container mx-auto py-8">
       <div className="flex justify-between items-center mb-8">
-        <h1 className="text-2xl font-bold">User Management</h1>
+        <h1 className="text-2xl font-bold">Admin Management</h1>
         <div className="flex gap-4">
           <div className="relative">
             <Input
               type="text"
-              placeholder="Search users..."
+              placeholder={activeTab === 'user-management' ? "Search users..." : "Search teams..."}
               onChange={handleSearchChange}
               className="pr-4 py-2 w-64"
             />
@@ -350,118 +584,220 @@ export function UserManagementPage() {
         </div>
       </div>
 
-      {isLoading || isLoadingTeams ? (
-        <div className="flex justify-center items-center h-64">
-          <LoadingSpinner size="lg" className="text-primary" />
-        </div>
-      ) : (
-        <div className="bg-white shadow-md rounded-lg overflow-hidden">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Name
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Email
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Team
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Role
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {users?.map((user) => (
-                <tr key={user.id}>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center">
-                      <div className="h-10 w-10 flex-shrink-0 flex items-center justify-center rounded-full bg-gray-200 text-gray-700 font-bold">
-                        {getUserInitials(user.fullName)}
-                      </div>
-                      <div className="ml-4">
-                        <div className="text-sm font-medium text-gray-900">{user.fullName}</div>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">{user.email}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">
-                      {user.teamId ? teamMap.get(user.teamId) || 'Unknown Team' : '-'}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <button
-                      onClick={() => handleRoleToggle(user.id, user.role, user.teamId)}
-                      disabled={user.role === 'ADMIN'}
-                      className={`px-3 py-1 rounded-full text-xs font-semibold ${user.role === 'ADMIN'
-                        ? 'bg-purple-100 text-purple-800 cursor-not-allowed'
-                        : user.role === 'TECH_LEAD'
-                          ? 'bg-blue-100 text-blue-800 hover:bg-blue-200'
-                          : user.role === 'TEAM_MEMBER'
-                            ? 'bg-green-100 text-green-800 hover:bg-green-200'
-                            : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
-                        }`}
-                    >
-                      {user.role === 'ADMIN' ? 'Admin' : user.role === 'TECH_LEAD' ? 'Tech Lead' : 'Team Member'}
-                    </button>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    <div className="flex space-x-2">
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        className="text-blue-600 hover:text-blue-800 hover:bg-blue-50"
-                        onClick={() => handleEditClick(user)}
-                        disabled={user.role === 'ADMIN'} 
-                      >
-                        <Icon icon={HiPencilSquare} className="w-4 h-4 mr-1" />
-                        Edit
-                      </Button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+      <Tabs defaultValue="user-management" onValueChange={setActiveTab} className="w-full">
+        <TabsList className="mb-6 bg-gray-100 p-1 rounded-lg w-full max-w-md mx-auto border border-gray-200 shadow-sm">
+          <TabsTrigger 
+            value="user-management" 
+            className="flex-1 py-3 px-4 gap-2 rounded transition-all data-[state=active]:bg-white data-[state=active]:shadow-sm"
+          >
+            <Icon icon={HiUsers} className="w-5 h-5" />
+            <span>User Management</span>
+          </TabsTrigger>
+          <TabsTrigger 
+            value="team-management" 
+            className="flex-1 py-3 px-4 gap-2 rounded transition-all data-[state=active]:bg-white data-[state=active]:shadow-sm"
+          >
+            <Icon icon={HiUserGroup} className="w-5 h-5" />
+            <span>Team Management</span>
+          </TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="user-management" className="mt-6">
+          {isLoading || isLoadingTeams ? (
+            <div className="flex justify-center items-center h-64">
+              <LoadingSpinner size="lg" className="text-primary" />
+            </div>
+          ) : (
+            <div className="bg-white shadow-md rounded-lg overflow-hidden">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Name
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Email
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Team
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Role
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {users?.map((user) => (
+                    <tr key={user.id}>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center">
+                          <div className="h-10 w-10 flex-shrink-0 flex items-center justify-center rounded-full bg-gray-200 text-gray-700 font-bold">
+                            {getUserInitials(user.fullName)}
+                          </div>
+                          <div className="ml-4">
+                            <div className="text-sm font-medium text-gray-900">{user.fullName}</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-900">{user.email}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-900">
+                          {user.teamId ? teamMap.get(user.teamId) || 'Unknown Team' : '-'}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <button
+                          onClick={() => handleRoleToggle(user.id, user.role, user.teamId)}
+                          disabled={user.role === 'ADMIN'}
+                          className={`px-3 py-1 rounded-full text-xs font-semibold ${user.role === 'ADMIN'
+                            ? 'bg-purple-100 text-purple-800 cursor-not-allowed'
+                            : user.role === 'TECH_LEAD'
+                              ? 'bg-blue-100 text-blue-800 hover:bg-blue-200'
+                              : user.role === 'TEAM_MEMBER'
+                                ? 'bg-green-100 text-green-800 hover:bg-green-200'
+                                : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
+                            }`}
+                        >
+                          {user.role === 'ADMIN' ? 'Admin' : user.role === 'TECH_LEAD' ? 'Tech Lead' : 'Team Member'}
+                        </button>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <div className="flex space-x-2">
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="text-blue-600 hover:text-blue-800 hover:bg-blue-50"
+                            onClick={() => handleEditClick(user)}
+                            disabled={user.role === 'ADMIN'} 
+                          >
+                            <Icon icon={HiPencilSquare} className="w-4 h-4 mr-1" />
+                            Edit
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
 
-          {/* Pagination Controls */}
-          <div className="px-6 py-4 flex items-center justify-between border-t border-gray-200">
-            <div className="flex-1 flex justify-between items-center">
-              <p className="text-sm text-gray-700">
-                Showing page {pagination.page} of {pagination.totalPages}
-              </p>
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handlePageChange(pagination.page - 1)}
-                  disabled={pagination.page <= 1}
-                >
-                  <HiChevronLeft className="h-5 w-5" />
-                  Previous
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handlePageChange(pagination.page + 1)}
-                  disabled={pagination.page >= pagination.totalPages}
-                >
-                  Next
-                  <HiChevronRight className="h-5 w-5" />
-                </Button>
+              {/* Pagination Controls */}
+              <div className="px-6 py-4 flex items-center justify-between border-t border-gray-200">
+                <div className="flex-1 flex justify-between items-center">
+                  <p className="text-sm text-gray-700">
+                    Showing page {pagination.page} of {pagination.totalPages}
+                  </p>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handlePageChange(pagination.page - 1)}
+                      disabled={pagination.page <= 1}
+                    >
+                      <HiChevronLeft className="h-5 w-5" />
+                      Previous
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handlePageChange(pagination.page + 1)}
+                      disabled={pagination.page >= pagination.totalPages}
+                    >
+                      Next
+                      <HiChevronRight className="h-5 w-5" />
+                    </Button>
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
-        </div>
-      )}
+          )}
+        </TabsContent>
+        
+        <TabsContent value="team-management" className="mt-6">
+          {isLoadingTeams ? (
+            <div className="flex justify-center items-center h-64">
+              <LoadingSpinner size="lg" className="text-primary" />
+            </div>
+          ) : (
+            <div className="bg-white shadow-md rounded-lg overflow-hidden">
+              <div className="p-4 flex justify-end border-b">
+                <Button 
+                  variant="default" 
+                  size="sm"
+                  onClick={handleCreateTeamClick}
+                  className="bg-blue-600 hover:bg-blue-700 text-white transition-colors"
+                >
+                  Create Team
+                </Button>
+              </div>
+              {teams && teams.length > 0 ? (
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-1/4">
+                        Team
+                      </th>
+                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Name
+                      </th>
+                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-1/6">
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {teams.map((team) => (
+                      <tr key={team.id} className="hover:bg-gray-50">
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex items-center justify-center">
+                            <div className="h-12 w-12 flex-shrink-0 flex items-center justify-center rounded-full bg-blue-100 text-blue-800 font-bold text-lg shadow-sm">
+                              {getTeamInitials(team.name)}
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-base font-semibold text-gray-900 text-center">{team.name}</div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          <div className="flex justify-center">
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              className="text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors"
+                              onClick={() => handleEditTeamClick(team)}
+                            >
+                              <Icon icon={HiPencilSquare} className="w-4 h-4 mr-1" />
+                              Edit
+                            </Button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              ) : (
+                <div className="p-8 text-center">
+                  <div className="flex justify-center mb-4">
+                    <Icon icon={HiUserGroup} className="w-16 h-16 text-blue-500" />
+                  </div>
+                  <h3 className="text-lg font-medium text-gray-700">No Teams Available</h3>
+                  <p className="text-gray-500 mt-2 mb-6">Create a team to get started</p>
+                  <Button 
+                    variant="default"
+                    onClick={handleCreateTeamClick}
+                  >
+                    Create New Team
+                  </Button>
+                </div>
+              )}
+            </div>
+          )}
+        </TabsContent>
+      </Tabs>
 
       {/* Edit User Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
@@ -613,6 +949,172 @@ export function UserManagementPage() {
                   Deleting...
                 </>
               ) : 'Yes, delete user'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Team Dialog */}
+      <Dialog open={isEditTeamDialogOpen} onOpenChange={setIsEditTeamDialogOpen}>
+        <DialogContent className="sm:max-w-[600px] p-0 overflow-hidden">
+          <div className="bg-gradient-to-r from-blue-500 to-purple-600 p-6">
+            <DialogHeader>
+              <DialogTitle className="text-xl font-bold text-white">Edit Team</DialogTitle>
+            </DialogHeader>
+          </div>
+          {editingTeam && (
+            <div className="p-6">
+              <div className="flex justify-center -mt-16 mb-6">
+                <div className="h-24 w-24 rounded-full bg-white border-4 border-white shadow-lg flex items-center justify-center text-blue-700 text-3xl font-bold">
+                  {getTeamInitials(editingTeam.name)}
+                </div>
+              </div>
+              
+              <div className="space-y-6">
+                <div className="grid grid-cols-12 items-center gap-4">
+                  <label htmlFor="current-name" className="col-span-3 text-right font-medium text-gray-700">
+                    Current Name
+                  </label>
+                  <div className="col-span-9">
+                    <Input 
+                      id="current-name" 
+                      value={editingTeam.name} 
+                      disabled 
+                      className="bg-gray-50 border-gray-300 w-full rounded-md" 
+                    />
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-12 items-center gap-4">
+                  <label htmlFor="new-name" className="col-span-3 text-right font-medium text-gray-700">
+                    Change Name
+                  </label>
+                  <div className="col-span-9">
+                    <Input 
+                      id="new-name" 
+                      value={editedTeamName} 
+                      onChange={handleTeamNameChange}
+                      className="border-gray-300 focus:border-blue-400 focus:ring focus:ring-blue-200 focus:ring-opacity-50 rounded-md w-full" 
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+          <DialogFooter className="border-t p-6 flex justify-between gap-4">
+            <Button 
+              variant="destructive" 
+              type="button"
+              onClick={() => {
+                setIsEditTeamDialogOpen(false);
+                setTeamToDelete(editingTeam);
+                setIsDeleteTeamDialogOpen(true);
+              }}
+              className="px-6 h-10 transition-colors"
+              disabled={updateTeamMutation.isPending}
+            >
+              Delete
+            </Button>
+            <Button 
+              type="submit" 
+              onClick={handleSaveTeamChanges} 
+              disabled={!isTeamFormChanged || updateTeamMutation.isPending}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-6 h-10 transition-colors"
+            >
+              {updateTeamMutation.isPending ? (
+                <>
+                  <LoadingSpinner size="sm" className="text-white mr-2" />
+                  Saving...
+                </>
+              ) : 'Save changes'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Team Confirmation Dialog */}
+      <Dialog open={isDeleteTeamDialogOpen} onOpenChange={setIsDeleteTeamDialogOpen}>
+        <DialogContent className="sm:max-w-md p-0 overflow-hidden">
+          <div className="bg-red-600 p-6">
+            <DialogHeader>
+              <DialogTitle className="text-xl font-bold text-white">Confirm Delete</DialogTitle>
+            </DialogHeader>
+          </div>
+          <div className="p-6">
+            <p className="text-gray-600">Do you want to delete this team? This action cannot be undone.</p>
+          </div>
+          <DialogFooter className="border-t p-6 flex justify-end gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setIsDeleteTeamDialogOpen(false)}
+              className="px-6 h-10 transition-colors"
+              disabled={deleteTeamMutation.isPending}
+            >
+              Cancel
+            </Button>
+            <Button 
+              variant="destructive"
+              onClick={handleConfirmTeamDelete}
+              className="px-6 h-10 transition-colors"
+              disabled={deleteTeamMutation.isPending}
+            >
+              {deleteTeamMutation.isPending ? (
+                <>
+                  <LoadingSpinner size="sm" className="text-white mr-2" />
+                  Deleting...
+                </>
+              ) : 'Yes, delete team'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Create Team Dialog */}
+      <Dialog open={isCreateTeamDialogOpen} onOpenChange={setIsCreateTeamDialogOpen}>
+        <DialogContent className="sm:max-w-[600px] p-0 overflow-hidden">
+          <div className="bg-gradient-to-r from-blue-500 to-purple-600 p-6">
+            <DialogHeader>
+              <DialogTitle className="text-xl font-bold text-white">Create New Team</DialogTitle>
+            </DialogHeader>
+          </div>
+          <div className="p-6">
+            <div className="space-y-6">
+              <div className="grid grid-cols-12 items-center gap-4">
+                <label htmlFor="team-name" className="col-span-3 text-right font-medium text-gray-700">
+                  Team Name
+                </label>
+                <div className="col-span-9">
+                  <Input 
+                    id="team-name" 
+                    value={newTeamName} 
+                    onChange={handleNewTeamNameChange}
+                    placeholder="Enter team name"
+                    className="border-gray-300 focus:border-blue-400 focus:ring focus:ring-blue-200 focus:ring-opacity-50 rounded-md w-full" 
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+          <DialogFooter className="border-t p-6 flex justify-end gap-4">
+            <Button 
+              variant="outline" 
+              onClick={() => setIsCreateTeamDialogOpen(false)}
+              className="px-6 h-10 transition-colors"
+            >
+              Cancel
+            </Button>
+            <Button 
+              type="submit" 
+              onClick={handleCreateTeam} 
+              disabled={!newTeamName.trim() || createTeamMutation.isPending}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-6 h-10 transition-colors"
+            >
+              {createTeamMutation.isPending ? (
+                <>
+                  <LoadingSpinner size="sm" className="text-white mr-2" />
+                  Creating...
+                </>
+              ) : 'Create Team'}
             </Button>
           </DialogFooter>
         </DialogContent>
