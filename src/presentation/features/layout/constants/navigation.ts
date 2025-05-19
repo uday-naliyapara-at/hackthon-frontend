@@ -17,10 +17,6 @@ import {
 
 import { NavSectionItem } from '@/presentation/shared/molecules';
 
-export const ORGANIZATION = {
-  name: 'Efficia',
-  type: 'Enterprise',
-} as const;
 
 export const PLATFORM_NAV_ITEMS: NavSectionItem[] = [
   { name: 'Chat', icon: HiChatBubbleLeftRight, 'data-testid': 'platform-chat', to: '/chat' },

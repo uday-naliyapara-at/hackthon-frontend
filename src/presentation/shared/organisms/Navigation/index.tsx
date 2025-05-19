@@ -1,11 +1,8 @@
 import { User } from '@/domain/models/user/types';
 import { cn } from '@/lib/utils';
 import {
-  NAV_SECTIONS,
-  ORGANIZATION,
   PLATFORM_NAV_ITEMS,
 } from '@/presentation/features/layout/constants/navigation';
-import { NavSection, OrganizationHeader } from '@/presentation/shared/molecules';
 
 export interface NavigationProps {
   isCollapsed?: boolean;
